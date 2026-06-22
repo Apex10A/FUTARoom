@@ -5,3 +5,11 @@ export function formatNaira(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export function formatListedDate(date: string): string {
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
+}
