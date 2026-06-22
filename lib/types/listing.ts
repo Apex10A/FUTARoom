@@ -9,5 +9,6 @@ export type Listing = {
   amenities: string[];
   verified: boolean;
   imageUrl: string;
+  listedAt: string;
   distanceToGate?: string;
 };

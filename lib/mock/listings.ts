@@ -11,6 +11,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Single room",
     amenities: ["Water", "Security", "WiFi"],
     verified: true,
+    listedAt: "2026-05-05",
     imageUrl:
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
     distanceToGate: "5 min walk",
@@ -25,6 +26,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Self-contain",
     amenities: ["Water", "Generator", "Kitchen"],
     verified: true,
+    listedAt: "2026-05-20",
     imageUrl:
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
     distanceToGate: "8 min walk",
@@ -39,6 +41,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "2-in-a-room",
     amenities: ["Water", "Security"],
     verified: true,
+    listedAt: "2026-04-28",
     imageUrl:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
     distanceToGate: "3 min walk",
@@ -53,6 +56,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "3-in-a-room",
     amenities: ["Water", "Borehole"],
     verified: false,
+    listedAt: "2026-03-15",
     imageUrl:
       "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80",
     distanceToGate: "12 min bike",
@@ -67,6 +71,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Self-contain",
     amenities: ["Water", "WiFi", "Kitchen", "Generator"],
     verified: true,
+    listedAt: "2026-05-10",
     imageUrl:
       "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80",
     distanceToGate: "10 min bike",
@@ -81,6 +86,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "2-in-a-room",
     amenities: ["Water", "Security"],
     verified: true,
+    listedAt: "2026-03-25",
     imageUrl:
       "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80",
     distanceToGate: "15 min bike",
@@ -95,6 +101,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Flat / apartment",
     amenities: ["Water", "WiFi", "Parking", "Generator"],
     verified: true,
+    listedAt: "2026-04-10",
     imageUrl:
       "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80",
     distanceToGate: "20 min drive",
@@ -109,6 +116,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Single room",
     amenities: ["Water", "Security", "WiFi"],
     verified: true,
+    listedAt: "2026-05-28",
     imageUrl:
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
     distanceToGate: "On campus edge",
@@ -123,6 +131,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "3-in-a-room",
     amenities: ["Water"],
     verified: false,
+    listedAt: "2026-03-01",
     imageUrl:
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
     distanceToGate: "25 min drive",
@@ -137,6 +146,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Self-contain",
     amenities: ["Water", "WiFi", "Kitchen", "AC"],
     verified: true,
+    listedAt: "2026-06-01",
     imageUrl:
       "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&q=80",
     distanceToGate: "6 min walk",
@@ -151,6 +161,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "Single room",
     amenities: ["Water", "Security", "Generator"],
     verified: true,
+    listedAt: "2026-05-15",
     imageUrl:
       "https://images.unsplash.com/photo-1574643150339-04e90be74463?w=800&q=80",
     distanceToGate: "4 min walk",
@@ -165,6 +176,7 @@ export const MOCK_LISTINGS: Listing[] = [
     roomTypeLabel: "2-in-a-room",
     amenities: ["Water", "Borehole", "Security"],
     verified: true,
+    listedAt: "2026-04-20",
     imageUrl:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
     distanceToGate: "11 min bike",
