@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, Search } from "lucide-react";
 
-import { ListingGrid } from "@/components/listings/listing-grid";
+import { ListingBrowseView } from "@/components/listings/listing-browse-view";
+import {
+  ListingsEmptyState,
+} from "@/components/listings/listings-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAreaLabel } from "@/lib/constants/areas";
@@ -9,9 +12,11 @@ import {
   getBudgetLabel,
   getRoomTypeLabel,
 } from "@/lib/constants/listing-filters";
+import { getSortLabel } from "@/lib/constants/listing-sort";
 import { filterListings } from "@/lib/listings/filter-listings";
 import { MOCK_LISTINGS } from "@/lib/mock/listings";
 import { parseListingSearchParams } from "@/lib/listings/search-params";
+import { parseListingSort, sortListings } from "@/lib/listings/sort-listings";
 
 type ListingsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -20,7 +25,9 @@ type ListingsPageProps = {
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {
   const params = await searchParams;
   const filters = parseListingSearchParams(params);
-  const listings = filterListings(MOCK_LISTINGS, filters);
+  const sort = parseListingSort(filters.sort);
+  const filtered = filterListings(MOCK_LISTINGS, filters);
+  const listings = sortListings(filtered, sort);
 
   const activeFilters = [
     filters.area && {
@@ -34,6 +41,10 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
     filters.roomType && {
       label: "Room type",
       value: getRoomTypeLabel(filters.roomType) ?? filters.roomType,
+    },
+    sort !== "newest" && {
+      label: "Sort",
+      value: getSortLabel(sort) ?? sort,
     },
   ].filter(Boolean) as { label: string; value: string }[];
 
@@ -54,8 +65,8 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
             Browse listings
           </h1>
           <p className="mt-1 text-muted-foreground">
-            {listings.length} {listings.length === 1 ? "property" : "properties"}{" "}
-            available
+            {listings.length}{" "}
+            {listings.length === 1 ? "property" : "properties"} available
             {activeFilters.length > 0 ? " matching your search" : ""}
           </p>
         </div>
@@ -79,17 +90,14 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
       )}
 
       {listings.length > 0 ? (
-        <ListingGrid listings={listings} />
+        <ListingBrowseView
+          key={`${sort}-${filters.area ?? ""}-${filters.maxPrice ?? ""}-${filters.roomType ?? ""}`}
+          listings={listings}
+          sort={sort}
+          filters={filters}
+        />
       ) : (
-        <div className="rounded-xl border border-dashed border-border bg-muted/30 p-10 text-center">
-          <p className="font-medium text-foreground">No listings found</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Try adjusting your area, budget, or room type filters.
-          </p>
-          <Button className="mt-4" render={<Link href="/" />}>
-            Search again
-          </Button>
-        </div>
+        <ListingsEmptyState />
       )}
     </div>
   );

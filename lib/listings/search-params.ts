@@ -1,7 +1,11 @@
+import type { ListingSort } from "@/lib/constants/listing-sort";
+import { DEFAULT_LISTING_SORT } from "@/lib/constants/listing-sort";
+
 export type ListingSearchFilters = {
   area?: string;
   maxPrice?: string;
   roomType?: string;
+  sort?: ListingSort;
 };
 
 export function buildListingsHref(filters: ListingSearchFilters): string {
@@ -15,6 +19,9 @@ export function buildListingsHref(filters: ListingSearchFilters): string {
   }
   if (filters.roomType && filters.roomType !== "any") {
     params.set("roomType", filters.roomType);
+  }
+  if (filters.sort && filters.sort !== DEFAULT_LISTING_SORT) {
+    params.set("sort", filters.sort);
   }
 
   const query = params.toString();
@@ -33,5 +40,6 @@ export function parseListingSearchParams(
     area: get("area"),
     maxPrice: get("maxPrice"),
     roomType: get("roomType"),
+    sort: get("sort") as ListingSearchFilters["sort"],
   };
 }
