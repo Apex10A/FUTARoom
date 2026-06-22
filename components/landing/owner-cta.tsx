@@ -16,7 +16,7 @@ export function OwnerCta() {
             for accommodation every semester.
           </p>
         </div>
-        <Button size="lg" render={<Link href="/register" />}>
+        <Button size="lg" render={<Link href="/register?role=owner" />}>
           List your property for free
           <ArrowRight className="size-4" />
         </Button>
