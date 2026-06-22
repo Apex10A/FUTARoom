@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { HeroSearch } from "@/components/landing/hero-search";
 import { PopularAreas } from "@/components/landing/popular-areas";
 import { StatsStrip } from "@/components/landing/stats-strip";
+import { FeaturedListings } from "@/components/landing/featured-listings";
 import { FeatureCards } from "@/components/landing/feature-cards";
 import { OwnerCta } from "@/components/landing/owner-cta";
 
@@ -35,6 +36,7 @@ export default function Home() {
       </section>
 
       <StatsStrip />
+      <FeaturedListings />
       <FeatureCards />
       <OwnerCta />
     </div>
