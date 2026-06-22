@@ -40,7 +40,9 @@ export function Navbar() {
           <Button variant="ghost" render={<Link href="/login" />}>
             Sign in
           </Button>
-          <Button render={<Link href="/register" />}>List your property</Button>
+          <Button render={<Link href="/register?role=owner" />}>
+            List your property
+          </Button>
         </div>
 
         <Button
@@ -83,7 +85,7 @@ export function Navbar() {
             </Button>
             <Button
               className="w-full"
-              render={<Link href="/register" />}
+              render={<Link href="/register?role=owner" />}
               onClick={() => setMobileOpen(false)}
             >
               List your property
