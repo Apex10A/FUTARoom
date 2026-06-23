@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MessageCircle, Phone } from "lucide-react";
 
+import { FavoriteButton } from "@/components/listings/favorite-button";
 import { Button } from "@/components/ui/button";
 import type { Listing, ListingOwner } from "@/lib/types/listing";
 import { formatListedDate, formatNaira } from "@/lib/utils/format";
@@ -62,6 +63,12 @@ export function ListingContactCard({ listing, owner }: ListingContactCardProps) 
             Contact unavailable
           </Button>
         )}
+
+        <FavoriteButton
+          listingId={listing.id}
+          size="default"
+          className="w-full justify-center bg-muted hover:bg-muted"
+        />
 
         <Button
           variant="ghost"

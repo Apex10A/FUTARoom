@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BadgeCheck, MapPin } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { FavoriteButton } from "@/components/listings/favorite-button";
 import type { Listing } from "@/lib/types/listing";
 import { formatNaira } from "@/lib/utils/format";
 
@@ -32,6 +33,10 @@ export function ListingCard({ listing }: ListingCardProps) {
             Verified
           </Badge>
         )}
+        <FavoriteButton
+          listingId={listing.id}
+          className="absolute right-3 top-3"
+        />
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
