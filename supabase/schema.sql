@@ -129,3 +129,37 @@ grant select, insert, update, delete on public.favorites to authenticated;
 grant insert, update, delete on public.listings to authenticated;
 grant insert, delete on public.listing_images to authenticated;
 grant update on public.profiles to authenticated;
+
+-- Owners manage gallery rows for their own listings
+create policy "Owners can view images for own listings"
+  on public.listing_images for select
+  using (
+    exists (
+      select 1
+      from public.listings
+      where listings.id = listing_images.listing_id
+        and listings.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can insert images for own listings"
+  on public.listing_images for insert
+  with check (
+    exists (
+      select 1
+      from public.listings
+      where listings.id = listing_images.listing_id
+        and listings.owner_id = auth.uid()
+    )
+  );
+
+create policy "Owners can delete images for own listings"
+  on public.listing_images for delete
+  using (
+    exists (
+      select 1
+      from public.listings
+      where listings.id = listing_images.listing_id
+        and listings.owner_id = auth.uid()
+    )
+  );

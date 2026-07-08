@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import {
   AMENITY_OPTIONS,
   LISTABLE_ROOM_TYPES,
 } from "@/lib/constants/amenities";
+import { createOwnerListing } from "@/lib/listings/create-owner-listing";
 import {
   type CreateListingFormData,
   type CreateListingStep,
@@ -57,6 +58,11 @@ const EMPTY_FORM: CreateListingFormData = {
   amenities: [],
 };
 
+type PhotoEntry = {
+  file: File;
+  previewUrl: string;
+};
+
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="text-sm text-destructive">{message}</p>;
@@ -65,9 +71,11 @@ function FieldError({ message }: { message?: string }) {
 export function CreateListingForm() {
   const [step, setStep] = useState<CreateListingStep>("basics");
   const [form, setForm] = useState<CreateListingFormData>(EMPTY_FORM);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const stepIndex = STEPS.findIndex((item) => item.id === step);
 
@@ -97,14 +105,26 @@ export function CreateListingForm() {
     const files = event.target.files;
     if (!files) return;
 
-    const urls = Array.from(files).map((file) => URL.createObjectURL(file));
-    setPhotoPreviews((current) => [...current, ...urls].slice(0, 6));
+    const entries = Array.from(files).map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+
+    setPhotos((current) => [...current, ...entries].slice(0, 6));
     setErrors((current) => ({ ...current, photos: undefined }));
+    setSubmitError(null);
     event.target.value = "";
   }
 
   function removePhoto(index: number) {
-    setPhotoPreviews((current) => current.filter((_, i) => i !== index));
+    setPhotos((current) => {
+      const next = [...current];
+      const [removed] = next.splice(index, 1);
+      if (removed) {
+        URL.revokeObjectURL(removed.previewUrl);
+      }
+      return next;
+    });
   }
 
   function goNext() {
@@ -129,7 +149,7 @@ export function CreateListingForm() {
     }
 
     if (step === "photos") {
-      const nextErrors = validatePhotosStep(photoPreviews.length);
+      const nextErrors = validatePhotosStep(photos.length);
       if (Object.keys(nextErrors).length > 0) {
         setErrors(nextErrors);
         return;
@@ -144,7 +164,22 @@ export function CreateListingForm() {
     if (step === "review") setStep("photos");
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    const result = await createOwnerListing({
+      form,
+      photos: photos.map((entry) => entry.file),
+    });
+
+    setIsSubmitting(false);
+
+    if (result.error) {
+      setSubmitError(result.error);
+      return;
+    }
+
     setSubmitted(true);
   }
 
@@ -181,8 +216,8 @@ export function CreateListingForm() {
             <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-6">
               <p className="font-medium text-foreground">Listing submitted for review</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Your property will appear as <strong>Pending</strong> until an
-                admin approves it. Backend submission will be wired up later.
+                Your property will appear as <strong>Pending</strong> on your
+                dashboard until an admin approves it.
               </p>
             </div>
             <Button render={<Link href="/dashboard/owner" />}>
@@ -326,7 +361,7 @@ export function CreateListingForm() {
                 <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
                   <ImagePlus className="mx-auto size-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Upload up to 6 photos. Files stay on your device for now.
+                    Upload up to 6 photos. JPG, PNG, or WebP recommended.
                   </p>
                   <Label
                     htmlFor="listing-photos"
@@ -347,15 +382,15 @@ export function CreateListingForm() {
                 </div>
                 <FieldError message={errors.photos} />
 
-                {photoPreviews.length > 0 && (
+                {photos.length > 0 && (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {photoPreviews.map((src, index) => (
+                    {photos.map((entry, index) => (
                       <div
-                        key={src}
+                        key={entry.previewUrl}
                         className="relative aspect-[4/3] overflow-hidden rounded-lg border border-border"
                       >
                         <Image
-                          src={src}
+                          src={entry.previewUrl}
                           alt={`Preview ${index + 1}`}
                           fill
                           className="object-cover"
@@ -419,10 +454,13 @@ export function CreateListingForm() {
                   <div className="sm:col-span-2">
                     <dt className="text-muted-foreground">Photos</dt>
                     <dd className="mt-1 font-medium text-foreground">
-                      {photoPreviews.length} selected
+                      {photos.length} selected
                     </dd>
                   </div>
                 </dl>
+                {submitError && (
+                  <p className="text-sm text-destructive">{submitError}</p>
+                )}
               </div>
             )}
 
@@ -437,8 +475,19 @@ export function CreateListingForm() {
               </Button>
 
               {step === "review" ? (
-                <Button type="button" onClick={handleSubmit}>
-                  Submit for review
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit for review"
+                  )}
                 </Button>
               ) : (
                 <Button type="button" onClick={goNext}>
