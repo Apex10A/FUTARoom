@@ -2,20 +2,53 @@
 
 import Link from "next/link";
 import { Heart } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/use-favorites";
-import { getMockListingById } from "@/lib/listings/get-mock-listing";
+import { fetchFavoriteListings } from "@/lib/favorites/supabase-favorites";
+import type { Listing } from "@/lib/types/listing";
 
 export function StudentFavoritesView() {
-  const { favoriteIds, ready, removeFavorite } = useFavorites();
+  const { favoriteIds, ready, error, removeFavorite } = useFavorites();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [listingsReady, setListingsReady] = useState(false);
 
-  const listings = favoriteIds
-    .map((id) => getMockListingById(id))
-    .filter((listing) => listing !== undefined);
+  useEffect(() => {
+    let cancelled = false;
 
-  if (!ready) {
+    async function loadListings() {
+      if (!ready) {
+        return;
+      }
+
+      setListingsReady(false);
+
+      if (favoriteIds.length === 0) {
+        if (!cancelled) {
+          setListings([]);
+          setListingsReady(true);
+        }
+        return;
+      }
+
+      const results = await fetchFavoriteListings(favoriteIds);
+
+      if (!cancelled) {
+        setListings(results);
+        setListingsReady(true);
+      }
+    }
+
+    void loadListings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [favoriteIds, ready]);
+
+  if (!ready || !listingsReady) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
         Loading your saved listings...
@@ -48,9 +81,15 @@ export function StudentFavoritesView() {
           {listings.length} saved {listings.length === 1 ? "listing" : "listings"}
         </p>
         <p className="text-xs text-muted-foreground">
-          Saved on this device · syncs when you log in later
+          Synced to your FUTARoom account
         </p>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <ListingGrid listings={listings} />
 
@@ -62,7 +101,7 @@ export function StudentFavoritesView() {
               key={listing.id}
               variant="outline"
               size="sm"
-              onClick={() => removeFavorite(listing.id)}
+              onClick={() => void removeFavorite(listing.id)}
             >
               Remove {listing.title}
             </Button>

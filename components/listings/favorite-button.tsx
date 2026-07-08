@@ -35,7 +35,7 @@ export function FavoriteButton({
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggleFavorite(listingId);
+        void toggleFavorite(listingId);
       }}
     >
       <Heart
