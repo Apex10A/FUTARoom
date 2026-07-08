@@ -26,7 +26,7 @@ export async function generateMetadata({
   params,
 }: ListingDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const listing = getListingById(id);
+  const listing = await getListingById(id);
 
   if (!listing) {
     return { title: "Listing not found" };
@@ -44,14 +44,14 @@ export default async function ListingDetailPage({
   params,
 }: ListingDetailPageProps) {
   const { id } = await params;
-  const listing = getListingById(id);
+  const listing = await getListingById(id);
 
   if (!listing) {
     notFound();
   }
 
   const images = listing.images ?? [listing.imageUrl];
-  const similar = getSimilarListings(listing);
+  const similar = await getSimilarListings(listing);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">

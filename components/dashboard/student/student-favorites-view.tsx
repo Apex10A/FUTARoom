@@ -6,13 +6,13 @@ import { Heart } from "lucide-react";
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/use-favorites";
-import { getListingById } from "@/lib/listings/get-listing";
+import { getMockListingById } from "@/lib/listings/get-mock-listing";
 
 export function StudentFavoritesView() {
   const { favoriteIds, ready, removeFavorite } = useFavorites();
 
   const listings = favoriteIds
-    .map((id) => getListingById(id))
+    .map((id) => getMockListingById(id))
     .filter((listing) => listing !== undefined);
 
   if (!ready) {

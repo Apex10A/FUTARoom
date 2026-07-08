@@ -1,34 +1,24 @@
-import { MOCK_LISTINGS } from "@/lib/mock/listings";
-import { LISTING_DETAILS } from "@/lib/mock/listing-details";
+import {
+  fetchApprovedListings,
+  fetchListingById,
+  fetchSimilarListings,
+} from "@/lib/listings/supabase-listings";
 import type { Listing } from "@/lib/types/listing";
 
-export function getListingById(id: string): Listing | undefined {
-  const listing = MOCK_LISTINGS.find((item) => item.id === id);
-  if (!listing) {
-    return undefined;
-  }
-
-  const details = LISTING_DETAILS[id];
-  if (!details) {
-    return listing;
-  }
-
-  return {
-    ...listing,
-    ...details,
-    images: details.images ?? [listing.imageUrl],
-  };
+/** Server-side: load an approved listing from Supabase. */
+export async function getListingById(id: string): Promise<Listing | null> {
+  return fetchListingById(id);
 }
 
-export function getSimilarListings(
+/** Server-side: similar listings in the same area from Supabase. */
+export async function getSimilarListings(
   listing: Listing,
   limit = 3
-): Listing[] {
-  return MOCK_LISTINGS
-    .filter(
-      (item) =>
-        item.id !== listing.id && item.areaId === listing.areaId
-    )
-    .slice(0, limit)
-    .map((item) => getListingById(item.id)!);
+): Promise<Listing[]> {
+  return fetchSimilarListings(listing, limit);
+}
+
+/** Server-side: all approved listings for browse / featured sections. */
+export async function getApprovedListings(): Promise<Listing[]> {
+  return fetchApprovedListings();
 }
