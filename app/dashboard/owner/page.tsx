@@ -1,12 +1,13 @@
 import { OwnerListingStats } from "@/components/dashboard/owner/owner-listing-stats";
 import { OwnerListingsTable } from "@/components/dashboard/owner/owner-listings-table";
 import {
+  fetchOwnerListings,
   getOwnerListingStats,
-  MOCK_OWNER_LISTINGS,
-} from "@/lib/mock/owner-listings";
+} from "@/lib/listings/owner-listings";
 
-export default function OwnerDashboardPage() {
-  const stats = getOwnerListingStats(MOCK_OWNER_LISTINGS);
+export default async function OwnerDashboardPage() {
+  const listings = await fetchOwnerListings();
+  const stats = getOwnerListingStats(listings);
 
   return (
     <div className="space-y-6">
@@ -16,7 +17,7 @@ export default function OwnerDashboardPage() {
         pending={stats.pending}
         rejected={stats.rejected}
       />
-      <OwnerListingsTable listings={MOCK_OWNER_LISTINGS} />
+      <OwnerListingsTable listings={listings} />
     </div>
   );
 }
