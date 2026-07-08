@@ -3,14 +3,16 @@ import { ArrowRight } from "lucide-react";
 
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { Button } from "@/components/ui/button";
-import { MOCK_LISTINGS } from "@/lib/mock/listings";
+import { getApprovedListings } from "@/lib/listings/get-listing";
 
-const FEATURED_LISTINGS = MOCK_LISTINGS.filter((listing) => listing.verified).slice(
-  0,
-  3
-);
+export async function FeaturedListings() {
+  const allListings = await getApprovedListings();
+  const featured = allListings.filter((listing) => listing.verified).slice(0, 3);
 
-export function FeaturedListings() {
+  if (featured.length === 0) {
+    return null;
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -27,7 +29,7 @@ export function FeaturedListings() {
           <ArrowRight className="size-4" />
         </Button>
       </div>
-      <ListingGrid listings={FEATURED_LISTINGS} />
+      <ListingGrid listings={featured} />
     </section>
   );
 }

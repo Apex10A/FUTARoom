@@ -5,7 +5,7 @@ import { ListingsBrowseShell } from "@/components/listings/listings-browse-shell
 import { Button } from "@/components/ui/button";
 import { countSearchFilters } from "@/lib/listings/filter-helpers";
 import { filterListings } from "@/lib/listings/filter-listings";
-import { MOCK_LISTINGS } from "@/lib/mock/listings";
+import { getApprovedListings } from "@/lib/listings/get-listing";
 import { parseListingSearchParams } from "@/lib/listings/search-params";
 import { parseListingSort, sortListings } from "@/lib/listings/sort-listings";
 
@@ -17,7 +17,8 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
   const params = await searchParams;
   const filters = parseListingSearchParams(params);
   const sort = parseListingSort(filters.sort);
-  const filtered = filterListings(MOCK_LISTINGS, filters);
+  const allListings = await getApprovedListings();
+  const filtered = filterListings(allListings, filters);
   const listings = sortListings(filtered, sort);
   const filterCount = countSearchFilters(filters);
 
