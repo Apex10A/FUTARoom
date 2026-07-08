@@ -31,3 +31,14 @@ export function getAuthErrorMessage(message: string): string {
 
   return message;
 }
+
+export function getRequiredDashboardRole(pathname: string): ProfileRole | null {
+  if (pathname.startsWith("/dashboard/owner")) return "owner";
+  if (pathname.startsWith("/dashboard/admin")) return "admin";
+  if (pathname.startsWith("/dashboard/student")) return "student";
+  return null;
+}
+
+export function isSafeRedirectPath(path: string): boolean {
+  return path.startsWith("/") && !path.startsWith("//") && !path.includes(":");
+}

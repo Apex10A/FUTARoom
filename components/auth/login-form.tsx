@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import {
   getAuthErrorMessage,
   getDashboardPathForRole,
+  isSafeRedirectPath,
 } from "@/lib/auth/helpers";
 import type { ProfileRole } from "@/lib/auth/helpers";
 import { createClient } from "@/lib/supabase/client";
@@ -24,7 +25,7 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-sm text-destructive">{message}</p>;
 }
 
-export function LoginForm() {
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
   const [form, setForm] = useState<LoginFormData>({
     email: "",
@@ -85,6 +86,10 @@ export function LoginForm() {
       if (profile?.role) {
         redirectPath = getDashboardPathForRole(profile.role as ProfileRole);
       }
+    }
+
+    if (redirectTo && isSafeRedirectPath(redirectTo)) {
+      redirectPath = redirectTo;
     }
 
     router.push(redirectPath);
