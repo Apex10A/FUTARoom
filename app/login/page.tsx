@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   description: "Sign in to your FUTARoom account.",
 };
 
-export default function LoginPage() {
-  return <LoginForm />;
+type LoginPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const redirectParam = params.redirect;
+  const redirectTo =
+    typeof redirectParam === "string" ? redirectParam : undefined;
+
+  return <LoginForm redirectTo={redirectTo} />;
 }
