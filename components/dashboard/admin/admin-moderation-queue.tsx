@@ -9,7 +9,7 @@ import { ListingStatusBadge } from "@/components/dashboard/owner/listing-status-
 import { AdminStats } from "@/components/dashboard/admin/admin-stats";
 import { Button } from "@/components/ui/button";
 import { useAdminModeration } from "@/hooks/use-admin-moderation";
-import { getAdminListingStats } from "@/lib/mock/admin-listings";
+import { getAdminListingStats } from "@/lib/listings/admin-listings";
 import type { AdminListingTab } from "@/lib/types/admin-listing";
 import { formatListedDate, formatNaira } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,8 @@ const TABS: { id: AdminListingTab; label: string }[] = [
 ];
 
 export function AdminModerationQueue() {
-  const { listings, ready, approve, reject } = useAdminModeration();
+  const { listings, ready, loadError, actionError, busyId, approve, reject } =
+    useAdminModeration();
   const [activeTab, setActiveTab] = useState<AdminListingTab>("pending");
   const [lastAction, setLastAction] = useState<string | null>(null);
 
@@ -33,20 +34,33 @@ export function AdminModerationQueue() {
     return listings.filter((listing) => listing.status === activeTab);
   }, [listings, activeTab]);
 
-  function handleApprove(id: string, title: string) {
-    approve(id);
-    setLastAction(`Approved "${title}"`);
+  async function handleApprove(id: string, title: string) {
+    const ok = await approve(id);
+    if (ok) {
+      setLastAction(`Approved "${title}" — now live on browse`);
+    }
   }
 
-  function handleReject(id: string, title: string) {
-    reject(id);
-    setLastAction(`Rejected "${title}"`);
+  async function handleReject(id: string, title: string) {
+    const ok = await reject(id);
+    if (ok) {
+      setLastAction(`Rejected "${title}"`);
+    }
   }
 
   if (!ready) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
         Loading moderation queue...
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center">
+        <p className="font-medium text-foreground">Could not load moderation queue</p>
+        <p className="mt-2 text-sm text-muted-foreground">{loadError}</p>
       </div>
     );
   }
@@ -63,7 +77,13 @@ export function AdminModerationQueue() {
 
       {lastAction && (
         <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">
-          {lastAction} · changes saved locally until backend is connected
+          {lastAction}
+        </div>
+      )}
+
+      {actionError && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {actionError}
         </div>
       )}
 
@@ -157,18 +177,20 @@ export function AdminModerationQueue() {
                       <>
                         <Button
                           size="sm"
+                          disabled={busyId === listing.id}
                           onClick={() =>
-                            handleApprove(listing.id, listing.title)
+                            void handleApprove(listing.id, listing.title)
                           }
                         >
                           <Check className="size-4" />
-                          Approve
+                          {busyId === listing.id ? "Saving..." : "Approve"}
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
+                          disabled={busyId === listing.id}
                           onClick={() =>
-                            handleReject(listing.id, listing.title)
+                            void handleReject(listing.id, listing.title)
                           }
                         >
                           <X className="size-4" />
@@ -192,12 +214,13 @@ export function AdminModerationQueue() {
                       <Button
                         size="sm"
                         variant="outline"
+                        disabled={busyId === listing.id}
                         onClick={() =>
-                          handleApprove(listing.id, listing.title)
+                          void handleApprove(listing.id, listing.title)
                         }
                       >
                         <Check className="size-4" />
-                        Approve anyway
+                        {busyId === listing.id ? "Saving..." : "Approve anyway"}
                       </Button>
                     )}
                   </div>
