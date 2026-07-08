@@ -25,9 +25,9 @@ import {
   LEVEL_OPTIONS,
 } from "@/lib/constants/student-profile";
 import {
-  readStudentProfile,
-  writeStudentProfile,
-} from "@/lib/favorites/storage";
+  fetchStudentProfile,
+  saveStudentProfile,
+} from "@/lib/profile/student-profile";
 import type { StudentProfile } from "@/lib/types/student-profile";
 import { validateStudentProfile } from "@/lib/validations/student-profile";
 
@@ -43,10 +43,34 @@ export function StudentProfileForm() {
   >({});
   const [saved, setSaved] = useState(false);
   const [ready, setReady] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    setForm(readStudentProfile(DEFAULT_STUDENT_PROFILE));
-    setReady(true);
+    let cancelled = false;
+
+    async function loadProfile() {
+      const result = await fetchStudentProfile();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (result.error) {
+        setLoadError(result.error);
+      } else if (result.profile) {
+        setForm(result.profile);
+      }
+
+      setReady(true);
+    }
+
+    void loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function updateField<K extends keyof StudentProfile>(
@@ -56,9 +80,10 @@ export function StudentProfileForm() {
     setForm((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
     setSaved(false);
+    setSaveError(null);
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateStudentProfile(form);
     setErrors(nextErrors);
@@ -67,7 +92,18 @@ export function StudentProfileForm() {
       return;
     }
 
-    writeStudentProfile(form);
+    setIsSaving(true);
+    setSaveError(null);
+
+    const result = await saveStudentProfile(form);
+
+    setIsSaving(false);
+
+    if (result.error) {
+      setSaveError(result.error);
+      return;
+    }
+
     setSaved(true);
   }
 
@@ -75,6 +111,15 @@ export function StudentProfileForm() {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
         Loading profile...
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center">
+        <p className="font-medium text-foreground">Could not load profile</p>
+        <p className="mt-2 text-sm text-muted-foreground">{loadError}</p>
       </div>
     );
   }
@@ -96,6 +141,7 @@ export function StudentProfileForm() {
               value={form.fullName}
               onChange={(e) => updateField("fullName", e.target.value)}
               aria-invalid={Boolean(errors.fullName)}
+              disabled={isSaving}
             />
             <FieldError message={errors.fullName} />
           </div>
@@ -107,9 +153,12 @@ export function StudentProfileForm() {
                 id="student-email"
                 type="email"
                 value={form.email}
-                onChange={(e) => updateField("email", e.target.value)}
+                disabled
                 aria-invalid={Boolean(errors.email)}
               />
+              <p className="text-xs text-muted-foreground">
+                Email is tied to your sign-in account.
+              </p>
               <FieldError message={errors.email} />
             </div>
 
@@ -121,6 +170,7 @@ export function StudentProfileForm() {
                 value={form.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
                 aria-invalid={Boolean(errors.phone)}
+                disabled={isSaving}
               />
               <FieldError message={errors.phone} />
             </div>
@@ -130,10 +180,11 @@ export function StudentProfileForm() {
             <div className="space-y-1.5">
               <Label htmlFor="student-department">Department</Label>
               <Select
-                value={form.department}
+                value={form.department || undefined}
                 onValueChange={(value) =>
                   updateField("department", value ?? "")
                 }
+                disabled={isSaving}
               >
                 <SelectTrigger id="student-department" className="w-full">
                   <SelectValue placeholder="Select department" />
@@ -152,8 +203,9 @@ export function StudentProfileForm() {
             <div className="space-y-1.5">
               <Label htmlFor="student-level">Level</Label>
               <Select
-                value={form.level}
+                value={form.level || undefined}
                 onValueChange={(value) => updateField("level", value ?? "")}
+                disabled={isSaving}
               >
                 <SelectTrigger id="student-level" className="w-full">
                   <SelectValue placeholder="Select level" />
@@ -172,13 +224,22 @@ export function StudentProfileForm() {
 
           {saved && (
             <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">
-              Profile saved on this device. Account sync will be added with
-              authentication.
+              Profile saved to your FUTARoom account.
             </div>
           )}
 
-          <Button type="submit" className="w-full sm:w-auto">
-            Save profile
+          {saveError && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {saveError}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full sm:w-auto"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save profile"}
           </Button>
         </form>
       </CardContent>

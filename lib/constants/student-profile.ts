@@ -1,11 +1,11 @@
 import type { StudentProfile } from "@/lib/types/student-profile";
 
 export const DEFAULT_STUDENT_PROFILE: StudentProfile = {
-  fullName: "Afolabi Praise Oluwafemi",
-  email: "praise.afolabi@student.futa.edu.ng",
-  phone: "08012345678",
-  department: "Computer Science",
-  level: "400 Level",
+  fullName: "",
+  email: "",
+  phone: "",
+  department: "",
+  level: "",
 };
 
 export const DEPARTMENT_OPTIONS = [
