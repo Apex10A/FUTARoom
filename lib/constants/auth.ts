@@ -20,3 +20,10 @@ export function isUserRole(value: string): value is UserRole {
 export function getRoleLabel(role: UserRole): string {
   return USER_ROLES.find((item) => item.id === role)?.label ?? role;
 }
+
+export function resolveRegisterRole(roleParam?: string): UserRole {
+  if (roleParam && isUserRole(roleParam)) {
+    return roleParam;
+  }
+  return "student";
+}

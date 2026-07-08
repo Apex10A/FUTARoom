@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -8,7 +9,13 @@ import { RolePicker } from "@/components/auth/role-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type UserRole, isUserRole } from "@/lib/constants/auth";
+import {
+  getAuthErrorMessage,
+  getDashboardPathForRole,
+} from "@/lib/auth/helpers";
+import type { ProfileRole } from "@/lib/auth/helpers";
+import { type UserRole } from "@/lib/constants/auth";
+import { createClient } from "@/lib/supabase/client";
 import {
   type RegisterFormData,
   validateRegister,
@@ -24,6 +31,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
+  const router = useRouter();
   const [form, setForm] = useState<RegisterFormData>({
     fullName: "",
     email: "",
@@ -35,7 +43,9 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
   const [errors, setErrors] = useState<
     Partial<Record<keyof RegisterFormData, string>>
   >({});
-  const [submitted, setSubmitted] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField<K extends keyof RegisterFormData>(
     key: K,
@@ -43,10 +53,11 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
   ) {
     setForm((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
-    setSubmitted(false);
+    setAuthError(null);
+    setSuccessMessage(null);
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateRegister(form);
     setErrors(nextErrors);
@@ -55,7 +66,40 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
       return;
     }
 
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setAuthError(null);
+    setSuccessMessage(null);
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email.trim(),
+      password: form.password,
+      options: {
+        data: {
+          full_name: form.fullName.trim(),
+          phone: form.phone.trim(),
+          role: form.role,
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setAuthError(getAuthErrorMessage(error.message));
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (data.session) {
+      router.push(getDashboardPathForRole(form.role as ProfileRole));
+      router.refresh();
+      return;
+    }
+
+    setSuccessMessage(
+      "Account created. Check your email to confirm your address, then sign in."
+    );
+    setIsSubmitting(false);
   }
 
   return (
@@ -87,6 +131,7 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
             value={form.fullName}
             onChange={(event) => updateField("fullName", event.target.value)}
             aria-invalid={Boolean(errors.fullName)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.fullName} />
         </div>
@@ -101,6 +146,7 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
             value={form.email}
             onChange={(event) => updateField("email", event.target.value)}
             aria-invalid={Boolean(errors.email)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.email} />
         </div>
@@ -115,6 +161,7 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
             value={form.phone}
             onChange={(event) => updateField("phone", event.target.value)}
             aria-invalid={Boolean(errors.phone)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.phone} />
         </div>
@@ -129,6 +176,7 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
             value={form.password}
             onChange={(event) => updateField("password", event.target.value)}
             aria-invalid={Boolean(errors.password)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.password} />
         </div>
@@ -145,28 +193,27 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
               updateField("confirmPassword", event.target.value)
             }
             aria-invalid={Boolean(errors.confirmPassword)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.confirmPassword} />
         </div>
 
-        {submitted && (
-          <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">
-            Account UI validated successfully. Real sign-up will be enabled when
-            authentication is integrated.
+        {authError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {authError}
           </div>
         )}
 
-        <Button type="submit" className="w-full" size="lg">
-          Create account
+        {successMessage && (
+          <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">
+            {successMessage}
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+          {isSubmitting ? "Creating account..." : "Create account"}
         </Button>
       </form>
     </AuthShell>
   );
-}
-
-export function resolveRegisterRole(roleParam?: string): UserRole {
-  if (roleParam && isUserRole(roleParam)) {
-    return roleParam;
-  }
-  return "student";
 }
