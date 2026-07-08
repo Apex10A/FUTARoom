@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 
-import {
-  RegisterForm,
-  resolveRegisterRole,
-} from "@/components/auth/register-form";
+import { RegisterForm } from "@/components/auth/register-form";
+import { resolveRegisterRole } from "@/lib/constants/auth";
 
 export const metadata: Metadata = {
   title: "Create account",

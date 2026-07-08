@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getAuthErrorMessage,
+  getDashboardPathForRole,
+} from "@/lib/auth/helpers";
+import type { ProfileRole } from "@/lib/auth/helpers";
+import { createClient } from "@/lib/supabase/client";
 import {
   type LoginFormData,
   validateLogin,
@@ -18,6 +25,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function LoginForm() {
+  const router = useRouter();
   const [form, setForm] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -25,7 +33,8 @@ export function LoginForm() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof LoginFormData, string>>
   >({});
-  const [submitted, setSubmitted] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField<K extends keyof LoginFormData>(
     key: K,
@@ -33,10 +42,10 @@ export function LoginForm() {
   ) {
     setForm((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
-    setSubmitted(false);
+    setAuthError(null);
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateLogin(form);
     setErrors(nextErrors);
@@ -45,7 +54,41 @@ export function LoginForm() {
       return;
     }
 
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setAuthError(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: form.email.trim(),
+      password: form.password,
+    });
+
+    if (error) {
+      setAuthError(getAuthErrorMessage(error.message));
+      setIsSubmitting(false);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let redirectPath = "/dashboard/student";
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role) {
+        redirectPath = getDashboardPathForRole(profile.role as ProfileRole);
+      }
+    }
+
+    router.push(redirectPath);
+    router.refresh();
   }
 
   return (
@@ -72,6 +115,7 @@ export function LoginForm() {
             value={form.email}
             onChange={(event) => updateField("email", event.target.value)}
             aria-invalid={Boolean(errors.email)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.email} />
         </div>
@@ -86,19 +130,19 @@ export function LoginForm() {
             value={form.password}
             onChange={(event) => updateField("password", event.target.value)}
             aria-invalid={Boolean(errors.password)}
+            disabled={isSubmitting}
           />
           <FieldError message={errors.password} />
         </div>
 
-        {submitted && (
-          <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">
-            Sign-in UI is ready. Backend authentication will be connected in a
-            later sprint.
+        {authError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {authError}
           </div>
         )}
 
-        <Button type="submit" className="w-full" size="lg">
-          Sign in
+        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Sign in"}
         </Button>
       </form>
     </AuthShell>
