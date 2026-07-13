@@ -64,9 +64,8 @@ export async function fetchListingById(id: string): Promise<Listing | null> {
   return mapListingRow(data as ListingRow);
 }
 
-export async function fetchSimilarListings(
-  listing: Listing,
-  limit = 3
+export async function fetchOffersForPropertyGroup(
+  propertyGroupId: string
 ): Promise<Listing[]> {
   const supabase = await createClient();
 
@@ -74,8 +73,30 @@ export async function fetchSimilarListings(
     .from("listings")
     .select(LISTING_SELECT)
     .eq("status", "approved")
+    .eq("property_group_id", propertyGroupId)
+    .order("price_per_year", { ascending: true });
+
+  if (error) {
+    console.error("fetchOffersForPropertyGroup:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => mapListingRow(row as ListingRow));
+}
+
+export async function fetchSimilarListings(
+  listing: Listing,
+  limit = 3
+): Promise<Listing[]> {
+  const supabase = await createClient();
+  const propertyGroupId = listing.propertyGroupId ?? listing.id;
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select(LISTING_SELECT)
+    .eq("status", "approved")
     .eq("area_id", listing.areaId)
-    .neq("id", listing.id)
+    .neq("property_group_id", propertyGroupId)
     .order("listed_at", { ascending: false })
     .limit(limit);
 

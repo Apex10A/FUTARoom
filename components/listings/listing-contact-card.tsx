@@ -9,9 +9,20 @@ import { formatListedDate, formatNaira } from "@/lib/utils/format";
 type ListingContactCardProps = {
   listing: Listing;
   owner?: ListingOwner;
+  offerCount?: number;
+  cheapestPrice?: number;
 };
 
-export function ListingContactCard({ listing, owner }: ListingContactCardProps) {
+export function ListingContactCard({
+  listing,
+  owner,
+  offerCount = 1,
+  cheapestPrice,
+}: ListingContactCardProps) {
+  const hasMultipleOffers = offerCount > 1;
+  const isCheapest =
+    hasMultipleOffers && cheapestPrice === listing.pricePerYear;
+
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
       <div className="flex items-baseline justify-between gap-2">
@@ -20,6 +31,14 @@ export function ListingContactCard({ listing, owner }: ListingContactCardProps) 
         </p>
         <span className="text-sm text-muted-foreground">per year</span>
       </div>
+
+      {hasMultipleOffers && (
+        <p className="mt-2 text-sm text-primary">
+          {isCheapest
+            ? `Best price of ${offerCount} offers`
+            : `One of ${offerCount} offers · from ${formatNaira(cheapestPrice ?? listing.pricePerYear)}`}
+        </p>
+      )}
 
       <p className="mt-1 text-sm text-muted-foreground">
         Listed {formatListedDate(listing.listedAt)}
@@ -40,7 +59,7 @@ export function ListingContactCard({ listing, owner }: ListingContactCardProps) 
               render={<a href={`tel:${owner.phone}`} />}
             >
               <Phone className="size-4" />
-              Contact owner
+              Contact {hasMultipleOffers ? "this agent" : "owner"}
             </Button>
             <Button
               size="lg"
@@ -55,13 +74,19 @@ export function ListingContactCard({ listing, owner }: ListingContactCardProps) 
               }
             >
               <MessageCircle className="size-4" />
-              WhatsApp owner
+              WhatsApp {hasMultipleOffers ? "agent" : "owner"}
             </Button>
           </>
         ) : (
           <Button size="lg" className="w-full" disabled>
             Contact unavailable
           </Button>
+        )}
+
+        {hasMultipleOffers && (
+          <p className="text-center text-xs text-muted-foreground">
+            Compare all {offerCount} offers in the section below
+          </p>
         )}
 
         <FavoriteButton

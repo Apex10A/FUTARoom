@@ -8,6 +8,7 @@ import {
   ListingMetaBadges,
 } from "@/components/listings/listing-amenities";
 import { ListingContactCard } from "@/components/listings/listing-contact-card";
+import { CompareOffers } from "@/components/listings/compare-offers";
 import { ListingGallery } from "@/components/listings/listing-gallery";
 import { ListingOwnerCard } from "@/components/listings/listing-owner-card";
 import { SimilarListings } from "@/components/listings/similar-listings";
@@ -15,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   getListingById,
+  getOffersForListing,
   getSimilarListings,
 } from "@/lib/listings/get-listing";
 
@@ -51,7 +53,10 @@ export default async function ListingDetailPage({
   }
 
   const images = listing.images ?? [listing.imageUrl];
+  const offers = await getOffersForListing(listing);
   const similar = await getSimilarListings(listing);
+  const hasMultipleOffers = offers.length > 1;
+  const cheapestPrice = offers[0]?.pricePerYear ?? listing.pricePerYear;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -110,11 +115,23 @@ export default async function ListingDetailPage({
 
           <ListingAmenities amenities={listing.amenities} />
 
-          {listing.owner && <ListingOwnerCard owner={listing.owner} />}
+          <CompareOffers
+            offers={offers}
+            currentListingId={listing.id}
+          />
+
+          {!hasMultipleOffers && listing.owner && (
+            <ListingOwnerCard owner={listing.owner} />
+          )}
         </div>
 
         <aside className="mt-8 lg:mt-0 lg:sticky lg:top-24">
-          <ListingContactCard listing={listing} owner={listing.owner} />
+          <ListingContactCard
+            listing={listing}
+            owner={listing.owner}
+            offerCount={offers.length}
+            cheapestPrice={cheapestPrice}
+          />
         </aside>
       </div>
 
