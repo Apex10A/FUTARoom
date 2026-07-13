@@ -1,9 +1,9 @@
 import { ListingCard } from "@/components/listings/listing-card";
 import { ListingCardSkeleton } from "@/components/listings/listing-card-skeleton";
-import type { Listing } from "@/lib/types/listing";
+import type { Listing, PropertyBrowseItem } from "@/lib/types/listing";
 
 type ListingGridProps = {
-  listings: Listing[];
+  listings: Array<Listing | PropertyBrowseItem>;
   loading?: boolean;
   skeletonCount?: number;
 };
@@ -30,7 +30,14 @@ export function ListingGrid({
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {listings.map((listing) => (
-        <ListingCard key={listing.id} listing={listing} />
+        <ListingCard
+          key={
+            "propertyGroupId" in listing
+              ? listing.propertyGroupId
+              : listing.id
+          }
+          listing={listing}
+        />
       ))}
     </div>
   );

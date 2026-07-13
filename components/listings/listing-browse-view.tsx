@@ -20,10 +20,10 @@ import {
 } from "@/lib/constants/listing-sort";
 import type { ListingSearchFilters } from "@/lib/listings/search-params";
 import { buildListingsHref } from "@/lib/listings/search-params";
-import type { Listing } from "@/lib/types/listing";
+import type { PropertyBrowseItem } from "@/lib/types/listing";
 
 type ListingBrowseViewProps = {
-  listings: Listing[];
+  listings: PropertyBrowseItem[];
   sort: ListingSort;
   filters: ListingSearchFilters;
 };

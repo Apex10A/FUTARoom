@@ -1,20 +1,32 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { BadgeCheck, MapPin, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/listings/favorite-button";
-import type { Listing } from "@/lib/types/listing";
+import type { Listing, PropertyBrowseItem } from "@/lib/types/listing";
 import { formatNaira } from "@/lib/utils/format";
 
 type ListingCardProps = {
-  listing: Listing;
+  listing: Listing | PropertyBrowseItem;
 };
 
+function isGroupedListing(
+  listing: Listing | PropertyBrowseItem
+): listing is PropertyBrowseItem {
+  return "offerCount" in listing && listing.offerCount > 1;
+}
+
 export function ListingCard({ listing }: ListingCardProps) {
+  const grouped = isGroupedListing(listing);
+  const href = grouped
+    ? `/listings/${listing.displayListingId}`
+    : `/listings/${listing.id}`;
+  const favoriteId = grouped ? listing.displayListingId : listing.id;
+
   return (
     <Link
-      href={`/listings/${listing.id}`}
+      href={href}
       className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
@@ -33,8 +45,17 @@ export function ListingCard({ listing }: ListingCardProps) {
             Verified
           </Badge>
         )}
+        {grouped && (
+          <Badge
+            variant="secondary"
+            className="absolute bottom-3 left-3 gap-1 bg-background/95 shadow-sm"
+          >
+            <Users className="size-3" />
+            {listing.offerCount} offers
+          </Badge>
+        )}
         <FavoriteButton
-          listingId={listing.id}
+          listingId={favoriteId}
           className="absolute right-3 top-3"
         />
       </div>
@@ -45,12 +66,26 @@ export function ListingCard({ listing }: ListingCardProps) {
             <h3 className="font-semibold leading-snug text-foreground group-hover:text-primary">
               {listing.title}
             </h3>
-            <p className="shrink-0 text-sm font-semibold text-foreground">
-              {formatNaira(listing.pricePerYear)}
-              <span className="text-xs font-normal text-muted-foreground">
-                /yr
-              </span>
-            </p>
+            <div className="shrink-0 text-right">
+              {grouped ? (
+                <>
+                  <p className="text-xs text-muted-foreground">From</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {formatNaira(listing.minPricePerYear)}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      /yr
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm font-semibold text-foreground">
+                  {formatNaira(listing.pricePerYear)}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    /yr
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
           <p className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="size-3.5 shrink-0" />
@@ -61,6 +96,12 @@ export function ListingCard({ listing }: ListingCardProps) {
               </span>
             )}
           </p>
+          {grouped && listing.minPricePerYear !== listing.maxPricePerYear && (
+            <p className="text-xs font-medium text-primary">
+              {formatNaira(listing.minPricePerYear)} –{" "}
+              {formatNaira(listing.maxPricePerYear)} · Compare agent prices
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

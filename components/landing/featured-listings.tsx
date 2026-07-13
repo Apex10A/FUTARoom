@@ -3,11 +3,13 @@ import { ArrowRight } from "lucide-react";
 
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { Button } from "@/components/ui/button";
+import { groupListingsForBrowse } from "@/lib/listings/group-listings";
 import { getApprovedListings } from "@/lib/listings/get-listing";
 
 export async function FeaturedListings() {
   const allListings = await getApprovedListings();
-  const featured = allListings.filter((listing) => listing.verified).slice(0, 3);
+  const grouped = groupListingsForBrowse(allListings);
+  const featured = grouped.filter((listing) => listing.verified).slice(0, 3);
 
   if (featured.length === 0) {
     return null;
@@ -21,7 +23,8 @@ export async function FeaturedListings() {
             Featured listings
           </h2>
           <p className="mt-1 text-muted-foreground">
-            Verified lodges students are viewing right now.
+            Verified lodges students are viewing right now. Compare agent prices
+            where multiple offers exist.
           </p>
         </div>
         <Button variant="outline" render={<Link href="/listings" />}>
