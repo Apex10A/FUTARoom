@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,11 @@ import {
 } from "@/lib/constants/amenities";
 import { createOwnerListing } from "@/lib/listings/create-owner-listing";
 import {
+  fetchExistingProperties,
+  getExistingPropertyTemplate,
+  type ExistingPropertyOption,
+} from "@/lib/listings/existing-properties";
+import {
   type CreateListingFormData,
   type CreateListingStep,
   summarizeListing,
@@ -49,6 +54,8 @@ const STEPS: { id: CreateListingStep; label: string }[] = [
 ];
 
 const EMPTY_FORM: CreateListingFormData = {
+  listingMode: "new",
+  existingPropertyGroupId: "",
   title: "",
   areaId: "",
   roomTypeId: "",
@@ -76,8 +83,69 @@ export function CreateListingForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [existingProperties, setExistingProperties] = useState<
+    ExistingPropertyOption[]
+  >([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
 
   const stepIndex = STEPS.findIndex((item) => item.id === step);
+  const isExistingOffer = form.listingMode === "existing";
+  const selectedProperty = getExistingPropertyTemplate(
+    existingProperties,
+    form.existingPropertyGroupId
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProperties() {
+      const properties = await fetchExistingProperties();
+      if (!cancelled) {
+        setExistingProperties(properties);
+        setLoadingProperties(false);
+      }
+    }
+
+    void loadProperties();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function setListingMode(mode: CreateListingFormData["listingMode"]) {
+    setForm({ ...EMPTY_FORM, listingMode: mode });
+    setPhotos([]);
+    setErrors({});
+    setSubmitError(null);
+  }
+
+  function applyExistingProperty(propertyGroupId: string) {
+    const property = getExistingPropertyTemplate(
+      existingProperties,
+      propertyGroupId
+    );
+    if (!property) return;
+
+    setForm((current) => ({
+      ...current,
+      listingMode: "existing",
+      existingPropertyGroupId: property.propertyGroupId,
+      title: property.title,
+      areaId: property.areaId,
+      roomTypeId: property.roomTypeId,
+      description: property.description,
+      amenities: property.amenities,
+      distanceToGate: property.distanceToGate ?? "",
+    }));
+    setErrors((current) => ({
+      ...current,
+      existingPropertyGroupId: undefined,
+      title: undefined,
+      areaId: undefined,
+      roomTypeId: undefined,
+    }));
+  }
 
   function updateForm<K extends keyof CreateListingFormData>(
     key: K,
@@ -149,7 +217,7 @@ export function CreateListingForm() {
     }
 
     if (step === "photos") {
-      const nextErrors = validatePhotosStep(photos.length);
+      const nextErrors = validatePhotosStep(photos.length, form.listingMode);
       if (Object.keys(nextErrors).length > 0) {
         setErrors(nextErrors);
         return;
@@ -171,6 +239,7 @@ export function CreateListingForm() {
     const result = await createOwnerListing({
       form,
       photos: photos.map((entry) => entry.file),
+      fallbackImageUrl: selectedProperty?.imageUrl,
     });
 
     setIsSubmitting(false);
@@ -190,7 +259,7 @@ export function CreateListingForm() {
       <CardHeader className="border-b">
         <CardTitle className="text-xl font-semibold">Add a new listing</CardTitle>
         <CardDescription>
-          Submit property details for admin review before it goes live.
+          List a new lodge or add your price offer to an existing property.
         </CardDescription>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -228,17 +297,99 @@ export function CreateListingForm() {
           <div className="space-y-6">
             {step === "basics" && (
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="listing-title">Property name</Label>
-                  <Input
-                    id="listing-title"
-                    placeholder="e.g. Green View Lodge"
-                    value={form.title}
-                    onChange={(e) => updateForm("title", e.target.value)}
-                    aria-invalid={Boolean(errors.title)}
-                  />
-                  <FieldError message={errors.title} />
+                <div className="space-y-2">
+                  <Label>What are you listing?</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setListingMode("new")}
+                      className={cn(
+                        "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
+                        form.listingMode === "new"
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      New lodge
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setListingMode("existing")}
+                      className={cn(
+                        "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
+                        form.listingMode === "existing"
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      Offer on existing lodge
+                    </button>
+                  </div>
                 </div>
+
+                {isExistingOffer ? (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="existing-property">Select lodge</Label>
+                      <Select
+                        value={form.existingPropertyGroupId || undefined}
+                        onValueChange={(value) =>
+                          value && applyExistingProperty(value)
+                        }
+                        disabled={loadingProperties}
+                      >
+                        <SelectTrigger id="existing-property" className="w-full">
+                          <SelectValue
+                            placeholder={
+                              loadingProperties
+                                ? "Loading lodges..."
+                                : "Choose an approved lodge"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {existingProperties.map((property) => (
+                            <SelectItem
+                              key={property.propertyGroupId}
+                              value={property.propertyGroupId}
+                            >
+                              {property.title} · {property.areaLabel} · from{" "}
+                              {formatNaira(property.minPrice)}
+                              {property.offerCount > 1
+                                ? ` · ${property.offerCount} offers`
+                                : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FieldError message={errors.existingPropertyGroupId} />
+                    </div>
+
+                    {selectedProperty && (
+                      <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                        Adding your offer to{" "}
+                        <span className="font-medium text-foreground">
+                          {selectedProperty.title}
+                        </span>{" "}
+                        in {selectedProperty.areaLabel}. Students will compare
+                        your price with {selectedProperty.offerCount} existing{" "}
+                        {selectedProperty.offerCount === 1 ? "offer" : "offers"}.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="listing-title">Property name</Label>
+                    <Input
+                      id="listing-title"
+                      placeholder="e.g. Green View Lodge"
+                      value={form.title}
+                      onChange={(e) => updateForm("title", e.target.value)}
+                      aria-invalid={Boolean(errors.title)}
+                    />
+                    <FieldError message={errors.title} />
+                  </div>
+                )}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
@@ -248,6 +399,7 @@ export function CreateListingForm() {
                       onValueChange={(value) =>
                         updateForm("areaId", value ?? "")
                       }
+                      disabled={isExistingOffer && Boolean(selectedProperty)}
                     >
                       <SelectTrigger id="listing-area" className="w-full">
                         <SelectValue placeholder="Select area" />
@@ -270,6 +422,7 @@ export function CreateListingForm() {
                       onValueChange={(value) =>
                         updateForm("roomTypeId", value ?? "")
                       }
+                      disabled={isExistingOffer && Boolean(selectedProperty)}
                     >
                       <SelectTrigger id="listing-room" className="w-full">
                         <SelectValue placeholder="Select room type" />
@@ -287,7 +440,9 @@ export function CreateListingForm() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="listing-price">Price per year (₦)</Label>
+                  <Label htmlFor="listing-price">
+                    {isExistingOffer ? "Your price per year (₦)" : "Price per year (₦)"}
+                  </Label>
                   <Input
                     id="listing-price"
                     type="number"
@@ -361,7 +516,9 @@ export function CreateListingForm() {
                 <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
                   <ImagePlus className="mx-auto size-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Upload up to 6 photos. JPG, PNG, or WebP recommended.
+                    {isExistingOffer
+                      ? "Optional — the existing lodge photos will be used if you skip this step."
+                      : "Upload up to 6 photos. JPG, PNG, or WebP recommended."}
                   </p>
                   <Label
                     htmlFor="listing-photos"
@@ -415,6 +572,14 @@ export function CreateListingForm() {
               <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-5">
                 <h3 className="font-semibold text-foreground">Review your listing</h3>
                 <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-muted-foreground">Listing type</dt>
+                    <dd className="font-medium text-foreground">
+                      {summary.listingMode === "existing"
+                        ? "Offer on existing lodge"
+                        : "New lodge"}
+                    </dd>
+                  </div>
                   <div>
                     <dt className="text-muted-foreground">Property</dt>
                     <dd className="font-medium text-foreground">{summary.title}</dd>

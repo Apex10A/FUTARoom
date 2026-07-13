@@ -52,11 +52,15 @@ async function uploadListingPhotos(
 export async function createOwnerListing({
   form,
   photos,
+  fallbackImageUrl,
 }: {
   form: CreateListingFormData;
   photos: File[];
+  fallbackImageUrl?: string;
 }): Promise<{ listingId?: string; error?: string }> {
-  if (photos.length === 0) {
+  const isExistingOffer = form.listingMode === "existing";
+
+  if (!isExistingOffer && photos.length === 0) {
     return { error: "Add at least one photo." };
   }
 
@@ -84,13 +88,29 @@ export async function createOwnerListing({
     return { error: "Only owner accounts can create listings." };
   }
 
-  const { urls, error: uploadError } = await uploadListingPhotos(user.id, photos);
-  if (uploadError || !urls?.length) {
-    return { error: uploadError ?? "Photo upload failed." };
+  let imageUrls: string[] = [];
+
+  if (photos.length > 0) {
+    const { urls, error: uploadError } = await uploadListingPhotos(
+      user.id,
+      photos
+    );
+    if (uploadError || !urls?.length) {
+      return { error: uploadError ?? "Photo upload failed." };
+    }
+    imageUrls = urls;
+  } else if (fallbackImageUrl) {
+    imageUrls = [fallbackImageUrl];
+  } else {
+    return { error: "Add a photo or link to an existing lodge with photos." };
   }
 
   const areaLabel = getAreaLabel(form.areaId) ?? form.areaId;
   const roomTypeLabel = getRoomTypeLabelForForm(form.roomTypeId);
+  const propertyGroupId =
+    isExistingOffer && form.existingPropertyGroupId
+      ? form.existingPropertyGroupId
+      : null;
 
   const { data: listing, error: insertError } = await supabase
     .from("listings")
@@ -107,7 +127,8 @@ export async function createOwnerListing({
       amenities: form.amenities,
       status: "pending",
       verified: false,
-      image_url: urls[0],
+      image_url: imageUrls[0],
+      property_group_id: propertyGroupId,
     })
     .select("id")
     .single();
@@ -116,8 +137,19 @@ export async function createOwnerListing({
     return { error: insertError?.message ?? "Could not save listing." };
   }
 
+  if (!propertyGroupId) {
+    const { error: groupError } = await supabase
+      .from("listings")
+      .update({ property_group_id: listing.id })
+      .eq("id", listing.id);
+
+    if (groupError) {
+      return { error: groupError.message };
+    }
+  }
+
   const { error: imagesError } = await supabase.from("listing_images").insert(
-    urls.map((url, index) => ({
+    imageUrls.map((url, index) => ({
       listing_id: listing.id,
       url,
       sort_order: index,
