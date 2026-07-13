@@ -4,10 +4,14 @@ import { ArrowLeft, Search } from "lucide-react";
 import { ListingsBrowseShell } from "@/components/listings/listings-browse-shell";
 import { Button } from "@/components/ui/button";
 import { countSearchFilters } from "@/lib/listings/filter-helpers";
-import { filterListings } from "@/lib/listings/filter-listings";
+import {
+  filterPropertyBrowseItems,
+  groupListingsForBrowse,
+  sortPropertyBrowseItems,
+} from "@/lib/listings/group-listings";
 import { getApprovedListings } from "@/lib/listings/get-listing";
 import { parseListingSearchParams } from "@/lib/listings/search-params";
-import { parseListingSort, sortListings } from "@/lib/listings/sort-listings";
+import { parseListingSort } from "@/lib/listings/sort-listings";
 
 type ListingsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -18,8 +22,9 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
   const filters = parseListingSearchParams(params);
   const sort = parseListingSort(filters.sort);
   const allListings = await getApprovedListings();
-  const filtered = filterListings(allListings, filters);
-  const listings = sortListings(filtered, sort);
+  const grouped = groupListingsForBrowse(allListings);
+  const filtered = filterPropertyBrowseItems(grouped, filters);
+  const listings = sortPropertyBrowseItems(filtered, sort);
   const filterCount = countSearchFilters(filters);
 
   return (
@@ -41,7 +46,11 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
           <p className="mt-1 text-muted-foreground">
             {listings.length}{" "}
             {listings.length === 1 ? "property" : "properties"} available
-            {filterCount > 0 ? ` · ${filterCount} filter${filterCount === 1 ? "" : "s"} applied` : ""}
+            {filterCount > 0
+              ? ` · ${filterCount} filter${filterCount === 1 ? "" : "s"} applied`
+              : ""}
+            {" · "}
+            One card per lodge — compare agent prices on the detail page
           </p>
         </div>
         <Button variant="outline" render={<Link href="/" />}>

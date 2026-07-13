@@ -11,10 +11,10 @@ import type { ListingSort } from "@/lib/constants/listing-sort";
 import { getActiveFilters } from "@/lib/listings/filter-helpers";
 import type { ListingSearchFilters } from "@/lib/listings/search-params";
 import { buildListingsHref } from "@/lib/listings/search-params";
-import type { Listing } from "@/lib/types/listing";
+import type { PropertyBrowseItem } from "@/lib/types/listing";
 
 type ListingsBrowseShellProps = {
-  listings: Listing[];
+  listings: PropertyBrowseItem[];
   sort: ListingSort;
   filters: ListingSearchFilters;
 };
