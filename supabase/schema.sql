@@ -130,6 +130,14 @@ grant insert, update, delete on public.listings to authenticated;
 grant insert, delete on public.listing_images to authenticated;
 grant update on public.profiles to authenticated;
 
+-- Agent price transparency: group multiple offers per lodge
+alter table public.listings
+  add column if not exists property_group_id uuid;
+
+create index if not exists listings_property_group_id_idx
+  on public.listings (property_group_id)
+  where property_group_id is not null;
+
 -- Owners manage gallery rows for their own listings
 create policy "Owners can view images for own listings"
   on public.listing_images for select

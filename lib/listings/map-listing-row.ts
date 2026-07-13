@@ -25,6 +25,7 @@ export type ListingRow = {
   verified: boolean;
   image_url: string;
   listed_at: string;
+  property_group_id?: string | null;
   listing_images?: ListingImageRow[] | null;
   owner?: OwnerProfileRow | OwnerProfileRow[] | null;
 };
@@ -70,5 +71,6 @@ export function mapListingRow(row: ListingRow): Listing {
     distanceToGate: row.distance_to_gate ?? undefined,
     images: images.length > 0 ? images : [row.image_url],
     owner,
+    propertyGroupId: row.property_group_id ?? row.id,
   };
 }

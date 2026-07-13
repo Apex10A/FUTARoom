@@ -20,6 +20,7 @@ const LISTING_SELECT = `
   verified,
   image_url,
   listed_at,
+  property_group_id,
   listing_images ( url, sort_order ),
   owner:profiles!listings_owner_id_fkey ( full_name, phone )
 `;
