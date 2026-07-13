@@ -2,6 +2,8 @@ import { getAreaLabel } from "@/lib/constants/areas";
 import { LISTABLE_ROOM_TYPES } from "@/lib/constants/amenities";
 
 export type CreateListingFormData = {
+  listingMode: "new" | "existing";
+  existingPropertyGroupId: string;
   title: string;
   areaId: string;
   roomTypeId: string;
@@ -15,12 +17,24 @@ export type CreateListingStep = "basics" | "details" | "photos" | "review";
 
 export function validateBasicsStep(
   data: CreateListingFormData
-): Partial<Record<"title" | "areaId" | "roomTypeId" | "pricePerYear", string>> {
+): Partial<
+  Record<
+    "title" | "areaId" | "roomTypeId" | "pricePerYear" | "existingPropertyGroupId",
+    string
+  >
+> {
   const errors: Partial<
-    Record<"title" | "areaId" | "roomTypeId" | "pricePerYear", string>
+    Record<
+      "title" | "areaId" | "roomTypeId" | "pricePerYear" | "existingPropertyGroupId",
+      string
+    >
   > = {};
 
-  if (!data.title.trim()) {
+  if (data.listingMode === "existing") {
+    if (!data.existingPropertyGroupId) {
+      errors.existingPropertyGroupId = "Select the lodge you are listing an offer for.";
+    }
+  } else if (!data.title.trim()) {
     errors.title = "Property name is required.";
   }
 
@@ -60,7 +74,14 @@ export function validateDetailsStep(
   return errors;
 }
 
-export function validatePhotosStep(photoCount: number): { photos?: string } {
+export function validatePhotosStep(
+  photoCount: number,
+  listingMode: CreateListingFormData["listingMode"] = "new"
+): { photos?: string } {
+  if (listingMode === "existing") {
+    return {};
+  }
+
   if (photoCount === 0) {
     return { photos: "Add at least one photo." };
   }
@@ -73,6 +94,7 @@ export function getRoomTypeLabelForForm(id: string): string {
 
 export function summarizeListing(data: CreateListingFormData) {
   return {
+    listingMode: data.listingMode,
     title: data.title,
     area: getAreaLabel(data.areaId) ?? data.areaId,
     roomType: getRoomTypeLabelForForm(data.roomTypeId),
