@@ -14,12 +14,15 @@ type AdminListingRow = {
   status: ListingStatus;
   image_url: string;
   listed_at: string;
-  owner?: { full_name: string; phone: string | null } | { full_name: string; phone: string | null }[] | null;
+  owner?:
+    | { full_name: string; email: string | null; phone: string | null }
+    | { full_name: string; email: string | null; phone: string | null }[]
+    | null;
 };
 
 function resolveOwner(
   owner: AdminListingRow["owner"]
-): { full_name: string; phone: string | null } | undefined {
+): { full_name: string; email: string | null; phone: string | null } | undefined {
   if (!owner) return undefined;
   return Array.isArray(owner) ? owner[0] : owner;
 }
@@ -38,6 +41,7 @@ function mapAdminListingRow(row: AdminListingRow): AdminListing {
     listedAt: row.listed_at,
     imageUrl: row.image_url,
     ownerName: owner?.full_name ?? "Unknown owner",
+    ownerEmail: owner?.email ?? "Not provided",
     ownerPhone: owner?.phone ?? "Not provided",
   };
 }
@@ -52,7 +56,7 @@ const ADMIN_LISTING_SELECT = `
   status,
   image_url,
   listed_at,
-  owner:profiles!listings_owner_id_fkey ( full_name, phone )
+  owner:profiles!listings_owner_id_fkey ( full_name, email, phone )
 `;
 
 async function requireAdmin() {
@@ -89,7 +93,9 @@ export function getAdminListingStats(listings: AdminListing[]) {
     pending: listings.filter((item) => item.status === "pending").length,
     approved: listings.filter((item) => item.status === "approved").length,
     rejected: listings.filter((item) => item.status === "rejected").length,
-    owners: new Set(listings.map((item) => item.ownerName)).size,
+    owners: new Set(
+      listings.map((item) => item.ownerEmail || item.ownerName)
+    ).size,
   };
 }
 
