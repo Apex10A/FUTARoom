@@ -11,6 +11,7 @@ export type AdminListing = {
   listedAt: string;
   imageUrl: string;
   ownerName: string;
+  ownerEmail: string;
   ownerPhone: string;
 };
 

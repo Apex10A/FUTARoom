@@ -7,6 +7,7 @@ const LEGACY_PROFILE_KEY = "futaroom:student-profile";
 
 type ProfileRow = {
   full_name: string;
+  email: string | null;
   phone: string | null;
   department: string | null;
   level: string | null;
@@ -51,7 +52,7 @@ function buildProfile(
 ): StudentProfile {
   return {
     fullName: row.full_name || legacy?.fullName || "",
-    email: email || legacy?.email || "",
+    email: row.email || email || legacy?.email || "",
     phone: row.phone || legacy?.phone || "",
     department: row.department || legacy?.department || "",
     level: row.level || legacy?.level || "",
@@ -83,7 +84,7 @@ export async function fetchStudentProfile(): Promise<{
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("full_name, phone, department, level")
+    .select("full_name, email, phone, department, level")
     .eq("id", user.id)
     .maybeSingle();
 

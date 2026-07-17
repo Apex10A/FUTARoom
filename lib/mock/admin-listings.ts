@@ -14,6 +14,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
     ownerName: "Mr. Adebayo",
+    ownerEmail: "adebayo@example.com",
     ownerPhone: "+2348012345678",
   },
   {
@@ -28,6 +29,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1574643150339-04e90be74463?w=800&q=80",
     ownerName: "Mrs. Akintola",
+    ownerEmail: "akintola@example.com",
     ownerPhone: "+2348112345678",
   },
   {
@@ -42,6 +44,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80",
     ownerName: "Mrs. Fasanya",
+    ownerEmail: "fasanya@example.com",
     ownerPhone: "+2348056789012",
   },
   {
@@ -56,6 +59,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&q=80",
     ownerName: "Mr. Praise Properties",
+    ownerEmail: "praise.properties@example.com",
     ownerPhone: "+2348101234567",
   },
   {
@@ -70,6 +74,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
     ownerName: "Mrs. Ogunleye",
+    ownerEmail: "ogunleye@example.com",
     ownerPhone: "+2348023456789",
   },
   {
@@ -84,6 +89,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
     ownerName: "Mrs. Eze",
+    ownerEmail: "eze@example.com",
     ownerPhone: "+2348089012345",
   },
   {
@@ -98,6 +104,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80",
     ownerName: "Mr. Ibrahim",
+    ownerEmail: "ibrahim@example.com",
     ownerPhone: "+2348045678901",
   },
   {
@@ -112,6 +119,7 @@ export const MOCK_ADMIN_LISTINGS: AdminListing[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
     ownerName: "Mr. Bello",
+    ownerEmail: "bello@example.com",
     ownerPhone: "+2348090123456",
   },
 ];
@@ -122,7 +130,9 @@ export function getAdminListingStats(listings: AdminListing[]) {
     pending: listings.filter((item) => item.status === "pending").length,
     approved: listings.filter((item) => item.status === "approved").length,
     rejected: listings.filter((item) => item.status === "rejected").length,
-    owners: new Set(listings.map((item) => item.ownerName)).size,
+    owners: new Set(
+      listings.map((item) => item.ownerEmail || item.ownerName)
+    ).size,
   };
 }
 

@@ -157,6 +157,10 @@ export function AdminModerationQueue() {
                       <span className="text-foreground">{listing.ownerName}</span>
                     </p>
                     <p className="text-muted-foreground">
+                      Email:{" "}
+                      <span className="text-foreground">{listing.ownerEmail}</span>
+                    </p>
+                    <p className="text-muted-foreground">
                       Phone:{" "}
                       <span className="text-foreground">{listing.ownerPhone}</span>
                     </p>
