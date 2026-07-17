@@ -99,17 +99,20 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   return (
     <AuthShell
       title="Welcome back"
-      description="Sign in to browse listings, save favourites, or manage your properties."
+      description="Sign in to save favourites, manage listings, or continue your search."
       footer={
         <>
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-primary hover:underline">
+          <Link
+            href="/register"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
             Create one
           </Link>
         </>
       }
     >
-      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <form className="space-y-5" onSubmit={handleSubmit} noValidate>
         <div className="space-y-1.5">
           <Label htmlFor="login-email">Email</Label>
           <Input

@@ -105,17 +105,20 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
   return (
     <AuthShell
       title="Create your account"
-      description="Join FUTARoom to find accommodation or list your property for students."
+      description="Join as a student or property owner. It only takes a minute."
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link
+            href="/login"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
             Sign in
           </Link>
         </>
       }
     >
-      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <form className="space-y-5" onSubmit={handleSubmit} noValidate>
         <RolePicker
           value={form.role}
           onChange={(role) => updateField("role", role)}
