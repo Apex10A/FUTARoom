@@ -31,10 +31,10 @@ export function RolePicker({ value, onChange, error }: RolePickerProps) {
               type="button"
               onClick={() => onChange(role.id)}
               className={cn(
-                "rounded-xl border p-4 text-left transition-colors",
+                "rounded-xl border p-4 text-left transition-all",
                 selected
-                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                  : "border-border bg-card hover:bg-muted/50"
+                  ? "border-primary bg-primary/5 shadow-sm shadow-primary/10 ring-2 ring-primary/15"
+                  : "border-border bg-background hover:border-primary/30 hover:bg-muted/40"
               )}
             >
               <div

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
-import { SiteShell } from "@/components/layout/site-shell";
+import { ConditionalSiteShell } from "@/components/layout/conditional-site-shell";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants/site";
 
 import "./globals.css";
@@ -28,7 +28,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <SiteShell>{children}</SiteShell>
+        <ConditionalSiteShell>{children}</ConditionalSiteShell>
       </body>
     </html>
   );
