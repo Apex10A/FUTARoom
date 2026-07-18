@@ -3,14 +3,36 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { POPULAR_AREAS } from "@/lib/constants/areas";
 import { buildListingsHref } from "@/lib/listings/search-params";
+import { cn } from "@/lib/utils";
 
-export function PopularAreas() {
+type PopularAreasProps = {
+  variant?: "default" | "hero";
+};
+
+export function PopularAreas({ variant = "default" }: PopularAreasProps) {
+  const isHero = variant === "hero";
+
   return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="text-sm font-medium text-muted-foreground">
+    <div
+      className={cn(
+        "flex flex-col gap-3",
+        isHero ? "items-start" : "items-center"
+      )}
+    >
+      <p
+        className={cn(
+          "text-sm font-medium",
+          isHero ? "text-white/75" : "text-muted-foreground"
+        )}
+      >
         Popular areas near FUTA
       </p>
-      <div className="flex flex-wrap justify-center gap-2">
+      <div
+        className={cn(
+          "flex flex-wrap gap-2",
+          isHero ? "justify-start" : "justify-center"
+        )}
+      >
         {POPULAR_AREAS.map((area) => (
           <Link
             key={area.id}
@@ -19,7 +41,12 @@ export function PopularAreas() {
           >
             <Badge
               variant="outline"
-              className="px-3 py-1 text-sm hover:bg-muted"
+              className={cn(
+                "px-3 py-1 text-sm",
+                isHero
+                  ? "border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                  : "hover:bg-muted"
+              )}
             >
               {area.label}
             </Badge>
