@@ -37,7 +37,7 @@ export function LandingHero() {
           </Badge>
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
               Find your lodge near{" "}
               <span className="text-[#E8B84A]">FUTA</span>
             </h1>
