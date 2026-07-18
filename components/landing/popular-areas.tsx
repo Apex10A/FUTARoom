@@ -22,7 +22,7 @@ export function PopularAreas({ variant = "default" }: PopularAreasProps) {
       <p
         className={cn(
           "text-sm font-medium",
-          isHero ? "text-white/75" : "text-muted-foreground"
+          isHero ? "text-white/75" : "text-white/60"
         )}
       >
         Popular areas near FUTA
@@ -45,7 +45,7 @@ export function PopularAreas({ variant = "default" }: PopularAreasProps) {
                 "px-3 py-1 text-sm",
                 isHero
                   ? "border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
-                  : "hover:bg-muted"
+                  : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
               )}
             >
               {area.label}

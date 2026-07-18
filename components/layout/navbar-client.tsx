@@ -64,11 +64,9 @@ export function NavbarClient({ session }: NavbarClientProps) {
               "fixed top-0",
               heroNav
                 ? "border-b-0 bg-transparent"
-                : "border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+                : "border-b border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90"
             )
-          : isCreateListing
-            ? "sticky top-0 border-b border-white/10 bg-[#0a100e]/95 backdrop-blur"
-            : "sticky top-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          : "sticky top-0 border-b border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90"
       )}
     >
       <div

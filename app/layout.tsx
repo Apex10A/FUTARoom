@@ -26,7 +26,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sans.variable} h-full antialiased`}>
+    <html lang="en" className={`${sans.variable} dark h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
         <ConditionalSiteShell>{children}</ConditionalSiteShell>
       </body>
