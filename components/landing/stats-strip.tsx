@@ -1,5 +1,7 @@
 import { Building2, MapPin, ShieldCheck } from "lucide-react";
 
+import { LANDING_THEME } from "@/lib/constants/landing";
+
 const STATS = [
   {
     icon: Building2,
@@ -20,18 +22,23 @@ const STATS = [
 
 export function StatsStrip() {
   return (
-    <section className="border-y border-border bg-muted/30">
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:grid-cols-3 sm:px-6 lg:px-8">
+    <section className="border-y border-foreground/8 bg-[#f8f7f4]">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3 sm:px-6 lg:px-8">
         {STATS.map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center gap-4 text-center sm:text-left"
+            className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:text-left"
           >
-            <div className="mx-auto flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:mx-0">
+            <div
+              className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#0a100e] text-[#E8B84A]"
+            >
               <stat.icon className="size-5" />
             </div>
             <div>
-              <p className="text-2xl font-semibold tracking-tight text-foreground">
+              <p
+                className="text-3xl font-semibold tracking-tight"
+                style={{ color: LANDING_THEME.accent }}
+              >
                 {stat.value}
               </p>
               <p className="text-sm text-muted-foreground">{stat.label}</p>

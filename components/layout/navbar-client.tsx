@@ -25,7 +25,8 @@ export function NavbarClient({ session }: NavbarClientProps) {
   const [scrolled, setScrolled] = useState(false);
 
   const isHome = pathname === "/";
-  const heroNav = isHome && !scrolled && !mobileOpen;
+  const isCreateListing = pathname === "/dashboard/owner/listings/new";
+  const heroNav = (isHome && !scrolled && !mobileOpen) || isCreateListing;
 
   useEffect(() => {
     if (!isHome) {
@@ -65,10 +66,17 @@ export function NavbarClient({ session }: NavbarClientProps) {
                 ? "border-b-0 bg-transparent"
                 : "border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
             )
-          : "sticky top-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          : isCreateListing
+            ? "sticky top-0 border-b border-white/10 bg-[#0a100e]/95 backdrop-blur"
+            : "sticky top-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
       )}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div
+        className={cn(
+          "mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8",
+          isCreateListing ? "max-w-[1440px]" : "max-w-6xl"
+        )}
+      >
         <Link
           href="/"
           className={cn(
@@ -173,7 +181,12 @@ export function NavbarClient({ session }: NavbarClientProps) {
             : "border-border bg-background"
         )}
       >
-        <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 sm:px-6">
+        <nav
+          className={cn(
+            "mx-auto flex flex-col gap-1 px-4 py-3 sm:px-6",
+            isCreateListing ? "max-w-[1440px]" : "max-w-6xl"
+          )}
+        >
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}

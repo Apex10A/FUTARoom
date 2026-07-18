@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getSupabaseUrl } from "@/lib/supabase/env";
 
 const LISTING_MEDIA_BUCKET = "listing-images";
-const RESUMABLE_UPLOAD_THRESHOLD_BYTES = 6 * 1024 * 1024;
+const TUS_CHUNK_BYTES = 6 * 1024 * 1024;
 
 function getVideoExtension(file: File): string {
   const fromName = file.name.split(".").pop()?.toLowerCase();
@@ -30,15 +30,22 @@ function formatUploadError(error: unknown): string {
     );
   }
 
+  if (message.includes("tus:") || message.includes("chunk at offset")) {
+    return (
+      "Video upload failed during transfer. Try a shorter clip, compress the video under 15 MB, or upload on a stable connection. You can also add photos only and skip the video for now."
+    );
+  }
+
   return `Video upload failed: ${message}`;
 }
 
 async function uploadVideoStandard(
-  userId: string,
-  video: File,
   path: string,
-  extension: string
+  video: File,
+  extension: string,
+  onProgress?: (percent: number) => void
 ): Promise<{ error?: string }> {
+  onProgress?.(5);
   const supabase = createClient();
   const { error: uploadError } = await supabase.storage
     .from(LISTING_MEDIA_BUCKET)
@@ -51,11 +58,44 @@ async function uploadVideoStandard(
     return { error: formatUploadError(uploadError) };
   }
 
+  onProgress?.(100);
+  return {};
+}
+
+async function uploadVideoSigned(
+  path: string,
+  video: File,
+  extension: string,
+  onProgress?: (percent: number) => void
+): Promise<{ error?: string }> {
+  const supabase = createClient();
+  onProgress?.(5);
+
+  const { data, error } = await supabase.storage
+    .from(LISTING_MEDIA_BUCKET)
+    .createSignedUploadUrl(path);
+
+  if (error || !data?.token) {
+    return { error: formatUploadError(error) };
+  }
+
+  onProgress?.(15);
+
+  const { error: uploadError } = await supabase.storage
+    .from(LISTING_MEDIA_BUCKET)
+    .uploadToSignedUrl(path, data.token, video, {
+      contentType: video.type || `video/${extension}`,
+    });
+
+  if (uploadError) {
+    return { error: formatUploadError(uploadError) };
+  }
+
+  onProgress?.(100);
   return {};
 }
 
 async function uploadVideoResumable(
-  userId: string,
   video: File,
   path: string,
   extension: string,
@@ -78,7 +118,7 @@ async function uploadVideoResumable(
     await new Promise<void>((resolve, reject) => {
       const upload = new tus.Upload(video, {
         endpoint: `${supabaseUrl}/storage/v1/upload/resumable`,
-        retryDelays: [0, 1000, 3000, 5000, 10000],
+        retryDelays: [0, 2000, 5000, 10000],
         headers: {
           authorization: `Bearer ${accessToken}`,
           "x-upsert": "false",
@@ -91,7 +131,7 @@ async function uploadVideoResumable(
           contentType: video.type || `video/${extension}`,
           cacheControl: "3600",
         },
-        chunkSize: RESUMABLE_UPLOAD_THRESHOLD_BYTES,
+        chunkSize: TUS_CHUNK_BYTES,
         onError: (error) => reject(error),
         onProgress: (bytesUploaded, bytesTotal) => {
           if (bytesTotal > 0) {
@@ -101,18 +141,39 @@ async function uploadVideoResumable(
         onSuccess: () => resolve(),
       });
 
-      void upload.findPreviousUploads().then((previousUploads) => {
-        if (previousUploads.length > 0) {
-          upload.resumeFromPreviousUpload(previousUploads[0]);
-        }
-        upload.start();
-      });
+      // Always start fresh — stale TUS fingerprints cause chunk failures.
+      upload.start();
     });
   } catch (error) {
     return { error: formatUploadError(error) };
   }
 
   return {};
+}
+
+async function runUploadStrategies(
+  path: string,
+  video: File,
+  extension: string,
+  onProgress?: (percent: number) => void
+): Promise<{ error?: string }> {
+  const strategies = [
+    () => uploadVideoSigned(path, video, extension, onProgress),
+    () => uploadVideoStandard(path, video, extension, onProgress),
+    () => uploadVideoResumable(video, path, extension, onProgress),
+  ];
+
+  let lastError: string | undefined;
+
+  for (const strategy of strategies) {
+    const result = await strategy();
+    if (!result.error) {
+      return {};
+    }
+    lastError = result.error;
+  }
+
+  return { error: lastError ?? "Video upload failed." };
 }
 
 export async function uploadListingVideo(
@@ -130,10 +191,12 @@ export async function uploadListingVideo(
   const extension = getVideoExtension(video);
   const path = `${userId}/videos/${crypto.randomUUID()}.${extension}`;
 
-  const uploadResult =
-    video.size >= RESUMABLE_UPLOAD_THRESHOLD_BYTES
-      ? await uploadVideoResumable(userId, video, path, extension, onProgress)
-      : await uploadVideoStandard(userId, video, path, extension);
+  const uploadResult = await runUploadStrategies(
+    path,
+    video,
+    extension,
+    onProgress
+  );
 
   if (uploadResult.error) {
     return { error: uploadResult.error };

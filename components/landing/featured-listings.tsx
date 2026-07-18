@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { ListingGrid } from "@/components/listings/listing-grid";
+import { SectionHeading } from "@/components/landing/section-heading";
 import { Button } from "@/components/ui/button";
 import { groupListingsForBrowse } from "@/lib/listings/group-listings";
 import { getApprovedListings } from "@/lib/listings/get-listing";
@@ -16,23 +17,28 @@ export async function FeaturedListings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Featured listings
-          </h2>
-          <p className="mt-1 text-muted-foreground">
-            Verified lodges students are viewing right now. Compare agent prices
-            where multiple offers exist.
-          </p>
+    <section className="bg-[#f8f7f4] py-20 sm:py-24">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-12">
+          <SectionHeading
+            title="Featured listings"
+            subtitle="Verified lodges students are viewing right now. Compare agent prices where multiple offers exist."
+            align="left"
+            theme="light"
+          />
+          <div className="mt-6 flex justify-start sm:justify-end">
+            <Button
+              variant="outline"
+              className="border-foreground/15 bg-white/80 hover:bg-white"
+              render={<Link href="/listings" />}
+            >
+              View all
+              <ArrowRight className="size-4" />
+            </Button>
+          </div>
         </div>
-        <Button variant="outline" render={<Link href="/listings" />}>
-          View all
-          <ArrowRight className="size-4" />
-        </Button>
+        <ListingGrid listings={featured} />
       </div>
-      <ListingGrid listings={featured} />
     </section>
   );
 }

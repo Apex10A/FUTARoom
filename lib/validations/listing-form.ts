@@ -13,7 +13,12 @@ export type CreateListingFormData = {
   amenities: string[];
 };
 
-export type CreateListingStep = "basics" | "details" | "media" | "review";
+export type CreateListingStep =
+  | "type"
+  | "basics"
+  | "details"
+  | "media"
+  | "review";
 
 export function validateBasicsStep(
   data: CreateListingFormData
