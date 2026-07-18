@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, LogOut, Menu, X } from "lucide-react";
+import { Building2, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { AuthSession } from "@/lib/auth/session";
+import { getUserInitials } from "@/lib/auth/user-initials";
+import { UserProfileMenu } from "@/components/layout/user-profile-menu";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants/site";
 import { createClient } from "@/lib/supabase/client";
@@ -105,40 +107,7 @@ export function NavbarClient({ session }: NavbarClientProps) {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          {session ? (
-            <>
-              <span
-                className={cn(
-                  "hidden max-w-[140px] truncate text-sm lg:inline",
-                  heroNav ? "text-white/70" : "text-muted-foreground"
-                )}
-              >
-                {session.fullName}
-              </span>
-              <Button
-                variant="ghost"
-                className={cn(
-                  heroNav &&
-                    "text-white hover:bg-white/10 hover:text-white"
-                )}
-                render={<Link href={session.dashboardPath} />}
-              >
-                Dashboard
-              </Button>
-              <Button
-                variant="outline"
-                className={cn(
-                  heroNav &&
-                    "border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                )}
-                onClick={handleSignOut}
-                disabled={isSigningOut}
-              >
-                <LogOut className="size-4" />
-                {isSigningOut ? "Signing out..." : "Sign out"}
-              </Button>
-            </>
-          ) : (
+          {!session && (
             <Button
               variant="ghost"
               className={cn(
@@ -168,6 +137,15 @@ export function NavbarClient({ session }: NavbarClientProps) {
             >
               List your property
             </Button>
+          )}
+
+          {session && (
+            <UserProfileMenu
+              session={session}
+              heroNav={heroNav}
+              onSignOut={handleSignOut}
+              isSigningOut={isSigningOut}
+            />
           )}
         </div>
 
@@ -220,14 +198,34 @@ export function NavbarClient({ session }: NavbarClientProps) {
           >
             {session ? (
               <>
-                <p
-                  className={cn(
-                    "px-3 text-sm",
-                    heroNav ? "text-white/70" : "text-muted-foreground"
-                  )}
-                >
-                  Signed in as {session.fullName}
-                </p>
+                <div className="flex items-center gap-3 px-3 py-2">
+                  <span
+                    className={cn(
+                      "flex size-10 items-center justify-center rounded-full bg-violet-950 text-sm font-semibold text-violet-100",
+                      heroNav && "ring-2 ring-white/20"
+                    )}
+                  >
+                    {getUserInitials(session.fullName)}
+                  </span>
+                  <div className="min-w-0">
+                    <p
+                      className={cn(
+                        "truncate text-sm font-medium",
+                        heroNav ? "text-white" : "text-foreground"
+                      )}
+                    >
+                      {session.fullName}
+                    </p>
+                    <p
+                      className={cn(
+                        "truncate text-xs",
+                        heroNav ? "text-white/60" : "text-muted-foreground"
+                      )}
+                    >
+                      {session.email}
+                    </p>
+                  </div>
+                </div>
                 <Button
                   variant="outline"
                   className={cn(
