@@ -14,6 +14,7 @@ import { ListingOwnerCard } from "@/components/listings/listing-owner-card";
 import { SimilarListings } from "@/components/listings/similar-listings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { isListingVideoPlaceholder } from "@/lib/constants/listing-media";
 import {
   getListingById,
   getOffersForListing,
@@ -52,7 +53,11 @@ export default async function ListingDetailPage({
     notFound();
   }
 
-  const images = listing.images ?? [listing.imageUrl];
+  const images = (listing.images ?? [listing.imageUrl]).filter(
+    (url) => !isListingVideoPlaceholder(url)
+  );
+  const galleryImages =
+    images.length > 0 ? images : [listing.imageUrl];
   const offers = await getOffersForListing(listing);
   const similar = await getSimilarListings(listing);
   const hasMultipleOffers = offers.length > 1;
@@ -72,7 +77,11 @@ export default async function ListingDetailPage({
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-10">
         <div className="space-y-8">
-          <ListingGallery images={images} title={listing.title} />
+          <ListingGallery
+            images={galleryImages}
+            videoUrl={listing.videoUrl}
+            title={listing.title}
+          />
 
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,11 @@
 "use client";
 
 import { getAreaLabel } from "@/lib/constants/areas";
+import {
+  LISTING_VIDEO_PLACEHOLDER,
+} from "@/lib/constants/listing-media";
 import { createClient } from "@/lib/supabase/client";
+import { uploadListingVideo } from "@/lib/listings/upload-listing-video";
 import type { CreateListingFormData } from "@/lib/validations/listing-form";
 import { getRoomTypeLabelForForm } from "@/lib/validations/listing-form";
 
@@ -52,16 +56,20 @@ async function uploadListingPhotos(
 export async function createOwnerListing({
   form,
   photos,
+  video,
   fallbackImageUrl,
+  onVideoUploadProgress,
 }: {
   form: CreateListingFormData;
   photos: File[];
+  video?: File | null;
   fallbackImageUrl?: string;
+  onVideoUploadProgress?: (percent: number) => void;
 }): Promise<{ listingId?: string; error?: string }> {
   const isExistingOffer = form.listingMode === "existing";
 
-  if (!isExistingOffer && photos.length === 0) {
-    return { error: "Add at least one photo." };
+  if (!isExistingOffer && photos.length === 0 && !video) {
+    return { error: "Add at least one photo or a lodge video." };
   }
 
   const supabase = createClient();
@@ -89,6 +97,7 @@ export async function createOwnerListing({
   }
 
   let imageUrls: string[] = [];
+  let videoUrl: string | null = null;
 
   if (photos.length > 0) {
     const { urls, error: uploadError } = await uploadListingPhotos(
@@ -99,10 +108,32 @@ export async function createOwnerListing({
       return { error: uploadError ?? "Photo upload failed." };
     }
     imageUrls = urls;
+  }
+
+  if (video) {
+    const { url, error: uploadError } = await uploadListingVideo(
+      user.id,
+      video,
+      onVideoUploadProgress
+    );
+    if (uploadError || !url) {
+      return { error: uploadError ?? "Video upload failed." };
+    }
+    videoUrl = url;
+  }
+
+  let primaryImageUrl: string;
+
+  if (imageUrls.length > 0) {
+    primaryImageUrl = imageUrls[0];
   } else if (fallbackImageUrl) {
-    imageUrls = [fallbackImageUrl];
+    primaryImageUrl = fallbackImageUrl;
+  } else if (videoUrl) {
+    primaryImageUrl = LISTING_VIDEO_PLACEHOLDER;
   } else {
-    return { error: "Add a photo or link to an existing lodge with photos." };
+    return {
+      error: "Add a photo or video, or link to an existing lodge with photos.",
+    };
   }
 
   const areaLabel = getAreaLabel(form.areaId) ?? form.areaId;
@@ -127,7 +158,8 @@ export async function createOwnerListing({
       amenities: form.amenities,
       status: "pending",
       verified: false,
-      image_url: imageUrls[0],
+      image_url: primaryImageUrl,
+      video_url: videoUrl,
       property_group_id: propertyGroupId,
     })
     .select("id")
@@ -148,16 +180,18 @@ export async function createOwnerListing({
     }
   }
 
-  const { error: imagesError } = await supabase.from("listing_images").insert(
-    imageUrls.map((url, index) => ({
-      listing_id: listing.id,
-      url,
-      sort_order: index,
-    }))
-  );
+  if (imageUrls.length > 0) {
+    const { error: imagesError } = await supabase.from("listing_images").insert(
+      imageUrls.map((url, index) => ({
+        listing_id: listing.id,
+        url,
+        sort_order: index,
+      }))
+    );
 
-  if (imagesError) {
-    return { error: imagesError.message };
+    if (imagesError) {
+      return { error: imagesError.message };
+    }
   }
 
   return { listingId: listing.id };

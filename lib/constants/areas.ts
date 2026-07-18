@@ -7,6 +7,7 @@ export type FutaArea = {
 export const FUTA_AREAS: FutaArea[] = [
   { id: "south-gate", label: "South Gate", description: "Close to main student axis" },
   { id: "north-gate", label: "North Gate" },
+  { id: "west-gate", label: "West Gate" },
   { id: "ibule", label: "Ibule" },
   { id: "apatapiti", label: "Apatapiti" },
   { id: "ondo-road", label: "Ondo Road" },

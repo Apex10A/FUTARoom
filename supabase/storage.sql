@@ -1,5 +1,7 @@
 -- Run in Supabase SQL Editor after creating the "listing-images" bucket
 -- Dashboard → Storage → New bucket → name: listing-images → Public bucket: ON
+-- Recommended: set file size limit to 50 MB+ (Settings → Global → File size limit)
+-- Photos and lodge videos (MP4/MOV) upload to the same bucket under {user_id}/...
 
 -- Allow anyone to view listing photos (public bucket)
 create policy "Public can view listing images"

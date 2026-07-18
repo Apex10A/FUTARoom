@@ -30,6 +30,7 @@ const FAVORITE_LISTING_SELECT = `
   amenities,
   verified,
   image_url,
+  video_url,
   listed_at
 `;
 

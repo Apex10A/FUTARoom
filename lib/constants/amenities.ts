@@ -1,6 +1,8 @@
 export const AMENITY_OPTIONS = [
   "Water",
   "Security",
+  "Electricity",
+  "Wardrobe",
   "WiFi",
   "Generator",
   "Kitchen",

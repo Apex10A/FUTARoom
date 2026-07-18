@@ -13,7 +13,7 @@ export type CreateListingFormData = {
   amenities: string[];
 };
 
-export type CreateListingStep = "basics" | "details" | "photos" | "review";
+export type CreateListingStep = "basics" | "details" | "media" | "review";
 
 export function validateBasicsStep(
   data: CreateListingFormData
@@ -74,18 +74,28 @@ export function validateDetailsStep(
   return errors;
 }
 
-export function validatePhotosStep(
+export function validateMediaStep(
   photoCount: number,
+  hasVideo: boolean,
   listingMode: CreateListingFormData["listingMode"] = "new"
-): { photos?: string } {
+): { media?: string } {
   if (listingMode === "existing") {
     return {};
   }
 
-  if (photoCount === 0) {
-    return { photos: "Add at least one photo." };
+  if (photoCount === 0 && !hasVideo) {
+    return { media: "Add at least one photo or a lodge video." };
   }
   return {};
+}
+
+/** @deprecated Use validateMediaStep */
+export function validatePhotosStep(
+  photoCount: number,
+  listingMode: CreateListingFormData["listingMode"] = "new"
+): { photos?: string } {
+  const result = validateMediaStep(photoCount, false, listingMode);
+  return result.media ? { photos: result.media } : {};
 }
 
 export function getRoomTypeLabelForForm(id: string): string {

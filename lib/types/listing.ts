@@ -15,6 +15,7 @@ export type Listing = {
   amenities: string[];
   verified: boolean;
   imageUrl: string;
+  videoUrl?: string;
   listedAt: string;
   distanceToGate?: string;
   description?: string;
