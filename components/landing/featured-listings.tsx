@@ -17,19 +17,19 @@ export async function FeaturedListings() {
   }
 
   return (
-    <section className="bg-[#f8f7f4] py-20 sm:py-24">
+    <section className="bg-background py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12">
           <SectionHeading
             title="Featured listings"
             subtitle="Verified lodges students are viewing right now. Compare agent prices where multiple offers exist."
             align="left"
-            theme="light"
+            theme="dark"
           />
           <div className="mt-6 flex justify-start sm:justify-end">
             <Button
               variant="outline"
-              className="border-foreground/15 bg-white/80 hover:bg-white"
+              className="border-white/15 bg-white/5 hover:bg-white/10"
               render={<Link href="/listings" />}
             >
               View all

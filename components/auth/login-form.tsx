@@ -105,7 +105,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-[#E8B84A] underline-offset-4 hover:underline"
           >
             Create one
           </Link>

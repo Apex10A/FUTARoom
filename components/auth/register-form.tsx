@@ -111,7 +111,7 @@ export function RegisterForm({ defaultRole = "student" }: RegisterFormProps) {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-[#E8B84A] underline-offset-4 hover:underline"
           >
             Sign in
           </Link>

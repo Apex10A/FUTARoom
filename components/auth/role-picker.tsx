@@ -19,7 +19,7 @@ type RolePickerProps = {
 export function RolePicker({ value, onChange, error }: RolePickerProps) {
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-foreground">I am a...</p>
+      <p className="text-sm font-medium text-white">I am a...</p>
       <div className="grid gap-3 sm:grid-cols-2">
         {USER_ROLES.map((role) => {
           const Icon = ROLE_ICONS[role.id];
@@ -33,22 +33,22 @@ export function RolePicker({ value, onChange, error }: RolePickerProps) {
               className={cn(
                 "rounded-xl border p-4 text-left transition-all",
                 selected
-                  ? "border-primary bg-primary/5 shadow-sm shadow-primary/10 ring-2 ring-primary/15"
-                  : "border-border bg-background hover:border-primary/30 hover:bg-muted/40"
+                  ? "border-[#E8B84A]/50 bg-[#E8B84A]/10 ring-1 ring-[#E8B84A]/30"
+                  : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]"
               )}
             >
               <div
                 className={cn(
                   "mb-3 flex size-9 items-center justify-center rounded-lg",
                   selected
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    ? "bg-[#E8B84A]/20 text-[#E8B84A]"
+                    : "bg-white/5 text-white/60"
                 )}
               >
                 <Icon className="size-4" />
               </div>
-              <p className="font-medium text-foreground">{role.label}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="font-medium text-white">{role.label}</p>
+              <p className="mt-1 text-xs text-white/55">
                 {role.description}
               </p>
             </button>

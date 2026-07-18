@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { CreateListingForm } from "@/components/dashboard/owner/create-listing-form";
+import { CreateListingFormClient } from "@/components/dashboard/owner/create-listing-form-client";
 
 export const metadata: Metadata = {
   title: "Add listing",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function NewOwnerListingPage() {
-  return <CreateListingForm />;
+  return <CreateListingFormClient />;
 }
