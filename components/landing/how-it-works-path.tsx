@@ -1,32 +1,20 @@
 import Image from "next/image";
 
 import { HOW_IT_WORKS } from "@/lib/constants/how-it-works";
-import { LANDING_HERO_ACCENT } from "@/lib/constants/landing";
+import { SectionHeading } from "@/components/landing/section-heading";
 import { cn } from "@/lib/utils";
 
 export function HowItWorksPath() {
   return (
     <section className="bg-[#0a100e] py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="relative mb-16 sm:mb-20">
-          <div
-            aria-hidden
-            className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/15"
-          />
-          <div className="relative flex justify-end">
-            <div className="max-w-md bg-[#0a100e] pl-6 text-right">
-              <h2
-                className="text-2xl font-semibold tracking-tight sm:text-3xl"
-                style={{ color: LANDING_HERO_ACCENT }}
-              >
-                {HOW_IT_WORKS.title}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-white/65 sm:text-base">
-                {HOW_IT_WORKS.subtitle}
-              </p>
-            </div>
-          </div>
-        </div>
+        <SectionHeading
+          title={HOW_IT_WORKS.title}
+          subtitle={HOW_IT_WORKS.subtitle}
+          align="right"
+          theme="dark"
+          className="mb-16 sm:mb-20"
+        />
 
         <div className="space-y-20 sm:space-y-28">
           {HOW_IT_WORKS.steps.map((step, index) => {

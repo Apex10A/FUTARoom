@@ -1,25 +1,43 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { SectionHeading } from "@/components/landing/section-heading";
 import { Button } from "@/components/ui/button";
 
 export function OwnerCta() {
   return (
-    <section className="border-t border-border bg-secondary/30">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-16 text-center sm:px-6 lg:px-8">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Own a lodge or hostel?
-          </h2>
-          <p className="max-w-xl text-muted-foreground">
-            List your property on FUTARoom and reach students actively searching
-            for accommodation every semester.
-          </p>
+    <section className="relative overflow-hidden bg-[#0a100e]">
+      <Image
+        src="/images/hero/choose.jpg"
+        alt="Student reviewing accommodation options"
+        fill
+        sizes="100vw"
+        className="object-cover object-center opacity-40"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-r from-[#0a100e] via-[#0a100e]/90 to-[#0a100e]/75"
+      />
+
+      <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+        <div className="max-w-xl">
+          <SectionHeading
+            title="List your lodge on FUTARoom"
+            subtitle="Reach FUTA students every semester. Add your property, set your price, and let students contact you directly."
+            align="left"
+            theme="dark"
+            className="mb-8"
+          />
+          <Button
+            size="lg"
+            className="bg-white text-foreground shadow-lg shadow-black/20 hover:bg-white/90"
+            render={<Link href="/register?role=owner" />}
+          >
+            List your property for free
+            <ArrowRight className="size-4" />
+          </Button>
         </div>
-        <Button size="lg" render={<Link href="/register?role=owner" />}>
-          List your property for free
-          <ArrowRight className="size-4" />
-        </Button>
       </div>
     </section>
   );

@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { OwnerDashboardShell } from "@/components/dashboard/owner/owner-dashboard-shell";
@@ -12,6 +10,11 @@ export function OwnerDashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isCreateFlow = pathname === "/dashboard/owner/listings/new";
+
+  if (isCreateFlow) {
+    return <>{children}</>;
+  }
 
   return (
     <OwnerDashboardShell currentPath={pathname}>{children}</OwnerDashboardShell>
