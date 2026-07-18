@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, MapPin, Users } from "lucide-react";
+import { BadgeCheck, MapPin, Play, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/listings/favorite-button";
+import { isListingVideoPlaceholder } from "@/lib/constants/listing-media";
 import type { Listing, PropertyBrowseItem } from "@/lib/types/listing";
 import { formatNaira } from "@/lib/utils/format";
 
@@ -23,6 +24,9 @@ export function ListingCard({ listing }: ListingCardProps) {
     ? `/listings/${listing.displayListingId}`
     : `/listings/${listing.id}`;
   const favoriteId = grouped ? listing.displayListingId : listing.id;
+  const showVideoBadge =
+    Boolean(listing.videoUrl) &&
+    isListingVideoPlaceholder(listing.imageUrl);
 
   return (
     <Link
@@ -52,6 +56,12 @@ export function ListingCard({ listing }: ListingCardProps) {
           >
             <Users className="size-3" />
             {listing.offerCount} offers
+          </Badge>
+        )}
+        {showVideoBadge && (
+          <Badge className="absolute bottom-3 right-3 gap-1 bg-background/95 text-foreground shadow-sm">
+            <Play className="size-3 fill-current" />
+            Video tour
           </Badge>
         )}
         <FavoriteButton

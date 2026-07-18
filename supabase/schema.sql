@@ -31,6 +31,7 @@ create table public.listings (
   status public.listing_status not null default 'pending',
   verified boolean not null default false,
   image_url text not null,
+  video_url text,
   listed_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

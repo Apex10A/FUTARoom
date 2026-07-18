@@ -24,6 +24,7 @@ export type ListingRow = {
   amenities: string[];
   verified: boolean;
   image_url: string;
+  video_url?: string | null;
   listed_at: string;
   property_group_id?: string | null;
   listing_images?: ListingImageRow[] | null;
@@ -67,6 +68,7 @@ export function mapListingRow(row: ListingRow): Listing {
     amenities: row.amenities ?? [],
     verified: row.verified,
     imageUrl: row.image_url,
+    videoUrl: row.video_url ?? undefined,
     listedAt: row.listed_at,
     distanceToGate: row.distance_to_gate ?? undefined,
     images: images.length > 0 ? images : [row.image_url],

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#E6F5F2"/>
+  <rect width="800" height="600" fill="url(#g)" opacity="0.9"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D9488" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#0D9488" stop-opacity="0.28"/>
+    </linearGradient>
+  </defs>
+  <circle cx="400" cy="280" r="72" fill="#0D9488" fill-opacity="0.15"/>
+  <circle cx="400" cy="280" r="56" fill="#0D9488"/>
+  <path d="M382 252v56l44-28-44-28z" fill="white"/>
+  <text x="400" y="400" text-anchor="middle" fill="#134E4A" font-family="system-ui,sans-serif" font-size="28" font-weight="600">Video tour</text>
+  <text x="400" y="438" text-anchor="middle" fill="#5F8A85" font-family="system-ui,sans-serif" font-size="20">Tap to view listing</text>
+</svg>

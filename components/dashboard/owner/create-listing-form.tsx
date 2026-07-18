@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { ImagePlus, Loader2, Video, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FUTA_AREAS } from "@/lib/constants/areas";
+import { LISTING_VIDEO_ACCEPT } from "@/lib/constants/listing-media";
 import {
   AMENITY_OPTIONS,
   LISTABLE_ROOM_TYPES,
@@ -41,7 +42,7 @@ import {
   summarizeListing,
   validateBasicsStep,
   validateDetailsStep,
-  validatePhotosStep,
+  validateMediaStep,
 } from "@/lib/validations/listing-form";
 import { formatNaira } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,7 @@ import { cn } from "@/lib/utils";
 const STEPS: { id: CreateListingStep; label: string }[] = [
   { id: "basics", label: "Basics" },
   { id: "details", label: "Details" },
-  { id: "photos", label: "Photos" },
+  { id: "media", label: "Media" },
   { id: "review", label: "Review" },
 ];
 
@@ -70,6 +71,11 @@ type PhotoEntry = {
   previewUrl: string;
 };
 
+type VideoEntry = {
+  file: File;
+  previewUrl: string;
+};
+
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="text-sm text-destructive">{message}</p>;
@@ -79,9 +85,13 @@ export function CreateListingForm() {
   const [step, setStep] = useState<CreateListingStep>("basics");
   const [form, setForm] = useState<CreateListingFormData>(EMPTY_FORM);
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const [video, setVideo] = useState<VideoEntry | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState<number | null>(
+    null
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [existingProperties, setExistingProperties] = useState<
     ExistingPropertyOption[]
@@ -116,6 +126,7 @@ export function CreateListingForm() {
   function setListingMode(mode: CreateListingFormData["listingMode"]) {
     setForm({ ...EMPTY_FORM, listingMode: mode });
     setPhotos([]);
+    setVideo(null);
     setErrors({});
     setSubmitError(null);
   }
@@ -169,6 +180,33 @@ export function CreateListingForm() {
     setErrors((current) => ({ ...current, amenities: undefined }));
   }
 
+  function handleVideoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setVideo((current) => {
+      if (current) {
+        URL.revokeObjectURL(current.previewUrl);
+      }
+      return {
+        file,
+        previewUrl: URL.createObjectURL(file),
+      };
+    });
+    setErrors((current) => ({ ...current, media: undefined }));
+    setSubmitError(null);
+    event.target.value = "";
+  }
+
+  function removeVideo() {
+    setVideo((current) => {
+      if (current) {
+        URL.revokeObjectURL(current.previewUrl);
+      }
+      return null;
+    });
+  }
+
   function handlePhotosChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = event.target.files;
     if (!files) return;
@@ -179,7 +217,7 @@ export function CreateListingForm() {
     }));
 
     setPhotos((current) => [...current, ...entries].slice(0, 6));
-    setErrors((current) => ({ ...current, photos: undefined }));
+    setErrors((current) => ({ ...current, media: undefined }));
     setSubmitError(null);
     event.target.value = "";
   }
@@ -212,14 +250,18 @@ export function CreateListingForm() {
         setErrors(nextErrors as Record<string, string>);
         return;
       }
-      setStep("photos");
+      setStep("media");
       return;
     }
 
-    if (step === "photos") {
-      const nextErrors = validatePhotosStep(photos.length, form.listingMode);
+    if (step === "media") {
+      const nextErrors = validateMediaStep(
+        photos.length,
+        Boolean(video),
+        form.listingMode
+      );
       if (Object.keys(nextErrors).length > 0) {
-        setErrors(nextErrors);
+        setErrors(nextErrors as Record<string, string>);
         return;
       }
       setStep("review");
@@ -228,28 +270,38 @@ export function CreateListingForm() {
 
   function goBack() {
     if (step === "details") setStep("basics");
-    if (step === "photos") setStep("details");
-    if (step === "review") setStep("photos");
+    if (step === "media") setStep("details");
+    if (step === "review") setStep("media");
   }
 
   async function handleSubmit() {
     setSubmitError(null);
     setIsSubmitting(true);
+    setVideoUploadProgress(video ? 0 : null);
 
-    const result = await createOwnerListing({
-      form,
-      photos: photos.map((entry) => entry.file),
-      fallbackImageUrl: selectedProperty?.imageUrl,
-    });
+    try {
+      const result = await createOwnerListing({
+        form,
+        photos: photos.map((entry) => entry.file),
+        video: video?.file ?? null,
+        fallbackImageUrl: selectedProperty?.imageUrl,
+        onVideoUploadProgress: setVideoUploadProgress,
+      });
 
-    setIsSubmitting(false);
+      if (result.error) {
+        setSubmitError(result.error);
+        return;
+      }
 
-    if (result.error) {
-      setSubmitError(result.error);
-      return;
+      setSubmitted(true);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not submit listing.";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+      setVideoUploadProgress(null);
     }
-
-    setSubmitted(true);
   }
 
   const summary = summarizeListing(form);
@@ -511,14 +563,68 @@ export function CreateListingForm() {
               </div>
             )}
 
-            {step === "photos" && (
-              <div className="space-y-4">
+            {step === "media" && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6">
+                  <div className="flex items-start gap-3">
+                    <Video className="mt-0.5 size-5 shrink-0 text-primary" />
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <p className="font-medium text-foreground">Lodge video</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Upload a WhatsApp walkthrough if you don&apos;t have photos.
+                          MP4 or MOV, up to 50 MB.
+                        </p>
+                      </div>
+                      {video ? (
+                        <div className="space-y-3">
+                          <div className="relative aspect-video overflow-hidden rounded-lg border border-border bg-black">
+                            <video
+                              src={video.previewUrl}
+                              controls
+                              className="size-full object-contain"
+                            />
+                            <button
+                              type="button"
+                              onClick={removeVideo}
+                              className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 shadow-sm"
+                              aria-label="Remove video"
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {video.file.name} ·{" "}
+                            {(video.file.size / (1024 * 1024)).toFixed(1)} MB
+                          </p>
+                        </div>
+                      ) : (
+                        <Label
+                          htmlFor="listing-video"
+                          className="inline-flex cursor-pointer"
+                        >
+                          <span className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted">
+                            Choose video
+                          </span>
+                          <input
+                            id="listing-video"
+                            type="file"
+                            accept={LISTING_VIDEO_ACCEPT}
+                            className="hidden"
+                            onChange={handleVideoChange}
+                          />
+                        </Label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
                   <ImagePlus className="mx-auto size-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
                     {isExistingOffer
-                      ? "Optional — the existing lodge photos will be used if you skip this step."
-                      : "Upload up to 6 photos. JPG, PNG, or WebP recommended."}
+                      ? "Optional photos — existing lodge images are used if you skip this."
+                      : "Optional photos — add up to 6, or use a video only."}
                   </p>
                   <Label
                     htmlFor="listing-photos"
@@ -537,7 +643,7 @@ export function CreateListingForm() {
                     />
                   </Label>
                 </div>
-                <FieldError message={errors.photos} />
+                <FieldError message={errors.media} />
 
                 {photos.length > 0 && (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -617,14 +723,21 @@ export function CreateListingForm() {
                     </dd>
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-muted-foreground">Photos</dt>
+                    <dt className="text-muted-foreground">Media</dt>
                     <dd className="mt-1 font-medium text-foreground">
-                      {photos.length} selected
+                      {photos.length} photo{photos.length === 1 ? "" : "s"}
+                      {video ? " · 1 video" : ""}
+                      {!photos.length && !video ? "None" : ""}
                     </dd>
                   </div>
                 </dl>
                 {submitError && (
                   <p className="text-sm text-destructive">{submitError}</p>
+                )}
+                {videoUploadProgress !== null && (
+                  <p className="text-sm text-muted-foreground">
+                    Uploading video… {videoUploadProgress}%
+                  </p>
                 )}
               </div>
             )}
@@ -648,7 +761,9 @@ export function CreateListingForm() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Submitting...
+                      {videoUploadProgress !== null
+                        ? `Uploading video (${videoUploadProgress}%)…`
+                        : "Submitting..."}
                     </>
                   ) : (
                     "Submit for review"

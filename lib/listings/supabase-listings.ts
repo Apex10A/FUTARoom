@@ -19,6 +19,7 @@ const LISTING_SELECT = `
   amenities,
   verified,
   image_url,
+  video_url,
   listed_at,
   property_group_id,
   listing_images ( url, sort_order ),
