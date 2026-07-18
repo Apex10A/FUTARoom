@@ -13,11 +13,11 @@ export function SectionHeading({
   title,
   subtitle,
   align = "left",
-  theme = "light",
+  theme = "dark",
   className,
 }: SectionHeadingProps) {
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-[#0a100e]" : "bg-[#f8f7f4]";
+  const bgClass = "bg-background";
 
   return (
     <div className={cn("relative", className)}>

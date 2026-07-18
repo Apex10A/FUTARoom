@@ -22,16 +22,14 @@ const STATS = [
 
 export function StatsStrip() {
   return (
-    <section className="border-y border-foreground/8 bg-[#f8f7f4]">
+    <section className="border-y border-white/10 bg-background">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3 sm:px-6 lg:px-8">
         {STATS.map((stat) => (
           <div
             key={stat.label}
             className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:text-left"
           >
-            <div
-              className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#0a100e] text-[#E8B84A]"
-            >
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-[#E8B84A]">
               <stat.icon className="size-5" />
             </div>
             <div>
@@ -41,7 +39,7 @@ export function StatsStrip() {
               >
                 {stat.value}
               </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-sm text-white/60">{stat.label}</p>
             </div>
           </div>
         ))}

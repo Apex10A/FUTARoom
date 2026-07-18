@@ -33,7 +33,7 @@ import {
 import {
   clearCreateListingDraft,
   CREATE_LISTING_EMPTY_FORM,
-  loadCreateListingDraft,
+  getInitialCreateListingState,
   saveCreateListingDraft,
   type CreateListingMediaHint,
 } from "@/lib/listings/create-listing-draft";
@@ -45,7 +45,6 @@ import {
 } from "@/lib/listings/existing-properties";
 import {
   type CreateListingFormData,
-  type CreateListingStep,
   summarizeListing,
   validateBasicsStep,
   validateDetailsStep,
@@ -104,8 +103,9 @@ function StepSection({
 }
 
 export function CreateListingForm() {
-  const [step, setStep] = useState<CreateListingStep>("type");
-  const [form, setForm] = useState<CreateListingFormData>(CREATE_LISTING_EMPTY_FORM);
+  const [draftBootstrap] = useState(getInitialCreateListingState);
+  const [step, setStep] = useState(draftBootstrap.step);
+  const [form, setForm] = useState<CreateListingFormData>(draftBootstrap.form);
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [video, setVideo] = useState<VideoEntry | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
@@ -119,9 +119,10 @@ export function CreateListingForm() {
     ExistingPropertyOption[]
   >([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
-  const [hydrated, setHydrated] = useState(false);
-  const [restoredDraft, setRestoredDraft] = useState(false);
-  const [mediaHint, setMediaHint] = useState<CreateListingMediaHint | undefined>();
+  const [mediaHint, setMediaHint] = useState<CreateListingMediaHint | undefined>(
+    draftBootstrap.mediaHint
+  );
+  const restoredDraft = draftBootstrap.restoredDraft;
 
   const isExistingOffer = form.listingMode === "existing";
   const selectedProperty = getExistingPropertyTemplate(
@@ -130,18 +131,7 @@ export function CreateListingForm() {
   );
 
   useEffect(() => {
-    const draft = loadCreateListingDraft();
-    if (draft) {
-      setForm(draft.form);
-      setStep(draft.step);
-      setMediaHint(draft.mediaHint);
-      setRestoredDraft(true);
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated || submitted) {
+    if (submitted) {
       return;
     }
 
@@ -154,7 +144,7 @@ export function CreateListingForm() {
       },
       savedAt: new Date().toISOString(),
     });
-  }, [form, step, photos.length, video?.file.name, hydrated, submitted]);
+  }, [form, step, photos.length, video?.file.name, submitted]);
 
   useEffect(() => {
     let cancelled = false;

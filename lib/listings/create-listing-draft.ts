@@ -72,6 +72,24 @@ function sanitizeForm(value: unknown): CreateListingFormData {
   };
 }
 
+export type CreateListingInitialState = {
+  form: CreateListingFormData;
+  step: CreateListingStep;
+  mediaHint?: CreateListingMediaHint;
+  restoredDraft: boolean;
+};
+
+export function getInitialCreateListingState(): CreateListingInitialState {
+  const draft = loadCreateListingDraft();
+
+  return {
+    form: draft?.form ?? EMPTY_FORM,
+    step: draft?.step ?? "type",
+    mediaHint: draft?.mediaHint,
+    restoredDraft: Boolean(draft),
+  };
+}
+
 export function loadCreateListingDraft(): CreateListingDraft | null {
   if (typeof window === "undefined") {
     return null;
