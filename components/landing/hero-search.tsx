@@ -47,10 +47,10 @@ export function HeroSearch() {
 
   return (
     <div className="w-full max-w-4xl">
-      <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xl shadow-black/15">
+      <div className="rounded-2xl border border-white/15 bg-white/5 p-3 shadow-xl shadow-black/30">
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
           <div className="space-y-1.5">
-            <Label htmlFor="hero-area" className="text-xs text-muted-foreground">
+            <Label htmlFor="hero-area" className="text-xs text-white/60">
               Area
             </Label>
             <Select value={area} onValueChange={handleAreaChange}>
@@ -71,7 +71,7 @@ export function HeroSearch() {
           <div className="space-y-1.5">
             <Label
               htmlFor="hero-budget"
-              className="text-xs text-muted-foreground"
+              className="text-xs text-white/60"
             >
               Max budget (per year)
             </Label>
@@ -92,7 +92,7 @@ export function HeroSearch() {
           <div className="space-y-1.5">
             <Label
               htmlFor="hero-room-type"
-              className="text-xs text-muted-foreground"
+              className="text-xs text-white/60"
             >
               Room type
             </Label>
