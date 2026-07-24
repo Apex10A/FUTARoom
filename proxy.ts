@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isSiteClosed } from "@/lib/site-status";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (isSiteClosed()) {
     const pathname = request.nextUrl.pathname;
     if (pathname !== "/") {
