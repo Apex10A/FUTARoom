@@ -25,13 +25,17 @@ const EMPTY_FORM: CreateListingFormData = {
   roomTypeId: "",
   pricePerYear: "",
   distanceToGate: "",
+  nearestLandmark: "",
   description: "",
   amenities: [],
+  latitude: null,
+  longitude: null,
 };
 
 const VALID_STEPS: CreateListingStep[] = [
   "type",
   "basics",
+  "location",
   "details",
   "media",
   "review",
@@ -64,11 +68,15 @@ function sanitizeForm(value: unknown): CreateListingFormData {
       typeof draft.pricePerYear === "string" ? draft.pricePerYear : "",
     distanceToGate:
       typeof draft.distanceToGate === "string" ? draft.distanceToGate : "",
+    nearestLandmark:
+      typeof draft.nearestLandmark === "string" ? draft.nearestLandmark : "",
     description:
       typeof draft.description === "string" ? draft.description : "",
     amenities: Array.isArray(draft.amenities)
       ? draft.amenities.filter((item): item is string => typeof item === "string")
       : [],
+    latitude: typeof draft.latitude === "number" ? draft.latitude : null,
+    longitude: typeof draft.longitude === "number" ? draft.longitude : null,
   };
 }
 

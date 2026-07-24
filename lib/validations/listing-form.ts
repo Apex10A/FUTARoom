@@ -9,13 +9,19 @@ export type CreateListingFormData = {
   roomTypeId: string;
   pricePerYear: string;
   distanceToGate: string;
+  /** Free-text fallback for lodges that aren't well mapped on OSM. */
+  nearestLandmark: string;
   description: string;
   amenities: string[];
+  /** Owner-pinned coordinates for a new lodge, set on the "location" step. */
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type CreateListingStep =
   | "type"
   | "basics"
+  | "location"
   | "details"
   | "media"
   | "review";
@@ -59,6 +65,15 @@ export function validateBasicsStep(
   }
 
   return errors;
+}
+
+export function validateLocationStep(
+  data: CreateListingFormData
+): { location?: string } {
+  if (data.latitude == null || data.longitude == null) {
+    return { location: "Pin the lodge's location on the map before continuing." };
+  }
+  return {};
 }
 
 export function validateDetailsStep(
@@ -115,6 +130,7 @@ export function summarizeListing(data: CreateListingFormData) {
     roomType: getRoomTypeLabelForForm(data.roomTypeId),
     pricePerYear: Number(data.pricePerYear),
     distanceToGate: data.distanceToGate || "Not specified",
+    nearestLandmark: data.nearestLandmark || "Not specified",
     description: data.description,
     amenities: data.amenities,
   };

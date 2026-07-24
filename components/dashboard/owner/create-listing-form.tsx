@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ArrowLeft, ImagePlus, Loader2, Video, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ImagePlus, Loader2, MapPin, Video, X } from "lucide-react";
 
+import { ListingAddressSearch } from "@/components/dashboard/owner/listing-address-search";
 import { CreateListingStepper } from "@/components/dashboard/owner/create-listing-stepper";
 import { ListingModeCards } from "@/components/dashboard/owner/listing-mode-cards";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FUTA_AREAS } from "@/lib/constants/areas";
+import { getAreaCentroid } from "@/lib/constants/futa-geo";
 import { LISTING_VIDEO_ACCEPT } from "@/lib/constants/listing-media";
 import {
   AMENITY_OPTIONS,
@@ -44,14 +47,34 @@ import {
   type ExistingPropertyOption,
 } from "@/lib/listings/existing-properties";
 import {
+  fetchNearbyListings,
+  type NearbyListingPin,
+} from "@/lib/listings/nearby-listings";
+import {
   type CreateListingFormData,
   summarizeListing,
   validateBasicsStep,
   validateDetailsStep,
+  validateLocationStep,
   validateMediaStep,
 } from "@/lib/validations/listing-form";
 import { formatNaira } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
+
+const ListingLocationPicker = dynamic(
+  () =>
+    import("@/components/dashboard/owner/listing-location-picker").then(
+      (mod) => mod.ListingLocationPicker
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[360px] items-center justify-center rounded-xl border border-white/15 bg-muted/30 text-sm text-white/50">
+        Loading map…
+      </div>
+    ),
+  }
+);
 
 const FIELD_CLASS =
   "h-12 px-4 text-base lg:h-14 lg:px-5 lg:text-lg border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:border-[#E8B84A]/50 focus-visible:ring-[#E8B84A]/20";
@@ -122,7 +145,12 @@ export function CreateListingForm() {
   const [mediaHint, setMediaHint] = useState<CreateListingMediaHint | undefined>(
     draftBootstrap.mediaHint
   );
+  const [locationFocusVersion, setLocationFocusVersion] = useState(0);
+  const [nearbyListings, setNearbyListings] = useState<NearbyListingPin[]>([]);
   const restoredDraft = draftBootstrap.restoredDraft;
+  const pinnedAreaIdRef = useRef<string | null>(
+    draftBootstrap.form.latitude != null ? draftBootstrap.form.areaId : null
+  );
 
   const isExistingOffer = form.listingMode === "existing";
   const selectedProperty = getExistingPropertyTemplate(
@@ -164,6 +192,21 @@ export function CreateListingForm() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    // fetchNearbyListings resolves to [] immediately when areaId is empty.
+    fetchNearbyListings(form.areaId).then((pins) => {
+      if (!cancelled) {
+        setNearbyListings(pins);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.areaId]);
+
   function setListingMode(mode: CreateListingFormData["listingMode"]) {
     setForm({ ...CREATE_LISTING_EMPTY_FORM, listingMode: mode });
     setPhotos([]);
@@ -171,6 +214,7 @@ export function CreateListingForm() {
     setMediaHint(undefined);
     setErrors({});
     setSubmitError(null);
+    pinnedAreaIdRef.current = null;
   }
 
   function applyExistingProperty(propertyGroupId: string) {
@@ -190,6 +234,7 @@ export function CreateListingForm() {
       description: property.description,
       amenities: property.amenities,
       distanceToGate: property.distanceToGate ?? "",
+      nearestLandmark: property.nearestLandmark ?? "",
     }));
     setErrors((current) => ({
       ...current,
@@ -289,6 +334,31 @@ export function CreateListingForm() {
         setErrors(nextErrors as Record<string, string>);
         return;
       }
+
+      if (isExistingOffer) {
+        setStep("details");
+        return;
+      }
+
+      if (pinnedAreaIdRef.current !== form.areaId) {
+        const centroid = getAreaCentroid(form.areaId);
+        pinnedAreaIdRef.current = form.areaId;
+        setForm((current) => ({
+          ...current,
+          latitude: centroid.lat,
+          longitude: centroid.lng,
+        }));
+      }
+      setStep("location");
+      return;
+    }
+
+    if (step === "location") {
+      const nextErrors = validateLocationStep(form);
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors as Record<string, string>);
+        return;
+      }
       setStep("details");
       return;
     }
@@ -319,7 +389,8 @@ export function CreateListingForm() {
 
   function goBack() {
     if (step === "basics") setStep("type");
-    if (step === "details") setStep("basics");
+    if (step === "location") setStep("basics");
+    if (step === "details") setStep(isExistingOffer ? "basics" : "location");
     if (step === "media") setStep("details");
     if (step === "review") setStep("media");
   }
@@ -379,7 +450,10 @@ export function CreateListingForm() {
         </div>
       </div>
 
-      <CreateListingStepper currentStep={step} />
+      <CreateListingStepper
+        currentStep={step}
+        showLocationStep={!isExistingOffer}
+      />
 
       <div className={cn(CREATE_LISTING_PAGE, "py-8 sm:py-10 lg:py-12")}>
         {submitted ? (
@@ -597,6 +671,75 @@ export function CreateListingForm() {
                         aria-invalid={Boolean(errors.pricePerYear)}
                       />
                       <FieldError message={errors.pricePerYear} />
+                    </div>
+                  </div>
+                </StepSection>
+              )}
+
+              {step === "location" && form.latitude != null && form.longitude != null && (
+                <StepSection
+                  title="Pin the exact location"
+                  description="Search for a nearby address or landmark to jump the map there, then drag the gold marker to the lodge's real spot. The blue marker just shows the general area you selected for reference — OpenStreetMap doesn't label most communities around FUTA by name."
+                >
+                  <div className={cn(CREATE_LISTING_FORM, "space-y-4")}>
+                    <ListingAddressSearch
+                      onSelect={(result) => {
+                        setForm((current) => ({
+                          ...current,
+                          latitude: result.latitude,
+                          longitude: result.longitude,
+                        }));
+                        setLocationFocusVersion(Date.now());
+                        setErrors((current) => ({
+                          ...current,
+                          location: undefined,
+                        }));
+                      }}
+                    />
+                    <ListingLocationPicker
+                      key={form.areaId}
+                      areaId={form.areaId}
+                      latitude={form.latitude}
+                      longitude={form.longitude}
+                      focusVersion={locationFocusVersion}
+                      nearbyListings={nearbyListings}
+                      onChange={(lat, lng) => {
+                        setForm((current) => ({
+                          ...current,
+                          latitude: lat,
+                          longitude: lng,
+                        }));
+                        setErrors((current) => ({
+                          ...current,
+                          location: undefined,
+                        }));
+                      }}
+                    />
+                    <div className="flex items-center gap-2 text-base text-white/60 lg:text-lg">
+                      <MapPin className="size-4 shrink-0 text-[#E8B84A]" />
+                      <span>
+                        {form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}
+                      </span>
+                    </div>
+                    <FieldError message={errors.location} />
+
+                    <div className="space-y-1.5 pt-2">
+                      <Label htmlFor="listing-landmark" className={LABEL_CLASS}>
+                        Nearest landmark (optional)
+                      </Label>
+                      <Input
+                        id="listing-landmark"
+                        className={FIELD_CLASS}
+                        placeholder="e.g. Behind Chapel of the Transfiguration"
+                        value={form.nearestLandmark}
+                        onChange={(e) =>
+                          updateForm("nearestLandmark", e.target.value)
+                        }
+                      />
+                      <p className="text-sm text-white/45 lg:text-base">
+                        Helps students find the lodge if the map search above
+                        didn&apos;t recognise the exact building.
+                      </p>
                     </div>
                   </div>
                 </StepSection>
@@ -821,6 +964,16 @@ export function CreateListingForm() {
                         <dt className="text-white/50">Room type</dt>
                         <dd className="font-medium text-white">{summary.roomType}</dd>
                       </div>
+                      {!isExistingOffer && (
+                        <div>
+                          <dt className="text-white/50">Location pin</dt>
+                          <dd className="font-medium text-white">
+                            {form.latitude != null && form.longitude != null
+                              ? `${form.latitude.toFixed(5)}, ${form.longitude.toFixed(5)}`
+                              : "Not set"}
+                          </dd>
+                        </div>
+                      )}
                       <div>
                         <dt className="text-white/50">Price / year</dt>
                         <dd className="font-medium text-white">
@@ -833,6 +986,14 @@ export function CreateListingForm() {
                           {summary.distanceToGate}
                         </dd>
                       </div>
+                      {!isExistingOffer && (
+                        <div className="sm:col-span-2">
+                          <dt className="text-white/50">Nearest landmark</dt>
+                          <dd className="font-medium text-white">
+                            {summary.nearestLandmark}
+                          </dd>
+                        </div>
+                      )}
                       <div className="sm:col-span-2">
                         <dt className="text-white/50">Description</dt>
                         <dd className="mt-1 text-white/85">{summary.description}</dd>

@@ -1,9 +1,11 @@
 "use client";
 
+import { LayoutGrid, Map } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ListingGrid } from "@/components/listings/listing-grid";
+import { ListingsBrowseMap } from "@/components/listings/listings-browse-map";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,6 +37,7 @@ export function ListingBrowseView({
 }: ListingBrowseViewProps) {
   const router = useRouter();
   const [visibleCount, setVisibleCount] = useState(LISTINGS_PAGE_SIZE);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
 
   const visibleListings = listings.slice(0, visibleCount);
   const hasMore = visibleCount < listings.length;
@@ -60,10 +63,32 @@ export function ListingBrowseView({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {visibleListings.length} of {listings.length} results
+          Showing {viewMode === "map" ? listings.length : visibleListings.length}{" "}
+          of {listings.length} results
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-lg border border-white/10 p-0.5">
+            <Button
+              type="button"
+              size="sm"
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              onClick={() => setViewMode("grid")}
+            >
+              <LayoutGrid className="size-4" />
+              Grid
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={viewMode === "map" ? "default" : "ghost"}
+              onClick={() => setViewMode("map")}
+            >
+              <Map className="size-4" />
+              Map
+            </Button>
+          </div>
+
           <Label htmlFor="listing-sort" className="text-sm text-muted-foreground">
             Sort by
           </Label>
@@ -82,14 +107,20 @@ export function ListingBrowseView({
         </div>
       </div>
 
-      <ListingGrid listings={visibleListings} />
+      {viewMode === "map" ? (
+        <ListingsBrowseMap listings={listings} />
+      ) : (
+        <>
+          <ListingGrid listings={visibleListings} />
 
-      {hasMore && (
-        <div className="flex justify-center pt-2">
-          <Button variant="outline" onClick={handleLoadMore}>
-            Load more ({remainingCount} remaining)
-          </Button>
-        </div>
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button variant="outline" onClick={handleLoadMore}>
+                Load more ({remainingCount} remaining)
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -9,6 +9,7 @@ import {
 } from "@/components/listings/listing-amenities";
 import { ListingContactCard } from "@/components/listings/listing-contact-card";
 import { CompareOffers } from "@/components/listings/compare-offers";
+import { ListingDetailMap } from "@/components/listings/listing-detail-map";
 import { ListingGallery } from "@/components/listings/listing-gallery";
 import { ListingOwnerCard } from "@/components/listings/listing-owner-card";
 import { SimilarListings } from "@/components/listings/similar-listings";
@@ -108,6 +109,9 @@ export default async function ListingDetailPage({
               {listing.distanceToGate && (
                 <span>· {listing.distanceToGate}</span>
               )}
+              {listing.nearestLandmark && (
+                <span>· Near {listing.nearestLandmark}</span>
+              )}
             </p>
           </div>
 
@@ -123,6 +127,8 @@ export default async function ListingDetailPage({
           )}
 
           <ListingAmenities amenities={listing.amenities} />
+
+          <ListingDetailMap listing={listing} />
 
           <CompareOffers
             offers={offers}
