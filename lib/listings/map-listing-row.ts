@@ -21,6 +21,9 @@ export type ListingRow = {
   room_type_label: string;
   price_per_year: number;
   distance_to_gate: string | null;
+  nearest_landmark?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   amenities: string[];
   verified: boolean;
   image_url: string;
@@ -71,6 +74,9 @@ export function mapListingRow(row: ListingRow): Listing {
     videoUrl: row.video_url ?? undefined,
     listedAt: row.listed_at,
     distanceToGate: row.distance_to_gate ?? undefined,
+    nearestLandmark: row.nearest_landmark ?? undefined,
+    latitude: row.latitude ?? undefined,
+    longitude: row.longitude ?? undefined,
     images: images.length > 0 ? images : [row.image_url],
     owner,
     propertyGroupId: row.property_group_id ?? row.id,

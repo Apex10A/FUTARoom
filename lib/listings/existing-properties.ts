@@ -15,6 +15,7 @@ export type ExistingPropertyOption = {
   description: string;
   amenities: string[];
   distanceToGate?: string;
+  nearestLandmark?: string;
   imageUrl: string;
   minPrice: number;
   offerCount: number;
@@ -32,6 +33,7 @@ const EXISTING_PROPERTY_SELECT = `
   room_type_label,
   price_per_year,
   distance_to_gate,
+  nearest_landmark,
   amenities,
   verified,
   image_url,
@@ -66,6 +68,7 @@ export async function fetchExistingProperties(): Promise<ExistingPropertyOption[
     description: item.description ?? "",
     amenities: item.amenities,
     distanceToGate: item.distanceToGate,
+    nearestLandmark: item.nearestLandmark,
     imageUrl: item.imageUrl,
     minPrice: item.minPricePerYear,
     offerCount: item.offerCount,

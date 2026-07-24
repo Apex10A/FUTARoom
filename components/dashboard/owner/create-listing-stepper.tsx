@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 const STEPS: { id: CreateListingStep; label: string }[] = [
   { id: "type", label: "Listing type" },
   { id: "basics", label: "Basic info" },
+  { id: "location", label: "Location" },
   { id: "details", label: "Details" },
   { id: "media", label: "Media" },
   { id: "review", label: "Review" },
@@ -11,15 +12,23 @@ const STEPS: { id: CreateListingStep; label: string }[] = [
 
 type CreateListingStepperProps = {
   currentStep: CreateListingStep;
+  /** Offers on an existing lodge inherit that lodge's pinned location, so the step is hidden. */
+  showLocationStep?: boolean;
 };
 
-export function CreateListingStepper({ currentStep }: CreateListingStepperProps) {
-  const currentIndex = STEPS.findIndex((step) => step.id === currentStep);
+export function CreateListingStepper({
+  currentStep,
+  showLocationStep = true,
+}: CreateListingStepperProps) {
+  const steps = showLocationStep
+    ? STEPS
+    : STEPS.filter((step) => step.id !== "location");
+  const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
   return (
     <div className="border-b border-white/10">
       <div className={cn(CREATE_LISTING_PAGE, "flex gap-1 overflow-x-auto sm:gap-0")}>
-        {STEPS.map((step, index) => {
+        {steps.map((step, index) => {
           const isActive = step.id === currentStep;
           const isComplete = index < currentIndex;
 

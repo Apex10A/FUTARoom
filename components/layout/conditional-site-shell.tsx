@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 
 import { Navbar } from "@/components/layout/navbar";
 import { SiteShell } from "@/components/layout/site-shell";
+import { isSiteClosed } from "@/lib/site-status";
 
 const AUTH_PATHS = new Set(["/login", "/register"]);
 const MINIMAL_CHROME_PATHS = new Set([
@@ -14,6 +15,10 @@ export async function ConditionalSiteShell({
   children: React.ReactNode;
 }) {
   const pathname = (await headers()).get("x-pathname") ?? "";
+
+  if (isSiteClosed()) {
+    return children;
+  }
 
   if (AUTH_PATHS.has(pathname)) {
     return children;

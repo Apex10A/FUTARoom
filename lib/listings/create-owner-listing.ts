@@ -1,6 +1,7 @@
 "use client";
 
 import { getAreaLabel } from "@/lib/constants/areas";
+import { getAreaCentroid } from "@/lib/constants/futa-geo";
 import {
   LISTING_VIDEO_PLACEHOLDER,
 } from "@/lib/constants/listing-media";
@@ -143,6 +144,39 @@ export async function createOwnerListing({
       ? form.existingPropertyGroupId
       : null;
 
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+
+  if (propertyGroupId) {
+    // Offers on an existing lodge inherit that lodge's real, owner-pinned location.
+    const { data: groupListing } = await supabase
+      .from("listings")
+      .select("latitude, longitude")
+      .eq("property_group_id", propertyGroupId)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .limit(1)
+      .maybeSingle();
+
+    if (groupListing?.latitude != null && groupListing.longitude != null) {
+      latitude = groupListing.latitude;
+      longitude = groupListing.longitude;
+    } else {
+      // Defensive fallback only — every lodge created going forward has a
+      // real pin, so this should only ever hit legacy/seed rows.
+      const centroid = getAreaCentroid(form.areaId);
+      latitude = centroid.lat;
+      longitude = centroid.lng;
+    }
+  } else {
+    // New lodge: use the location the owner actually pinned on the map.
+    if (form.latitude == null || form.longitude == null) {
+      return { error: "Pin the lodge's location on the map before submitting." };
+    }
+    latitude = form.latitude;
+    longitude = form.longitude;
+  }
+
   const { data: listing, error: insertError } = await supabase
     .from("listings")
     .insert({
@@ -155,12 +189,15 @@ export async function createOwnerListing({
       room_type_label: roomTypeLabel,
       price_per_year: Number(form.pricePerYear),
       distance_to_gate: form.distanceToGate.trim() || null,
+      nearest_landmark: form.nearestLandmark.trim() || null,
       amenities: form.amenities,
       status: "pending",
       verified: false,
       image_url: primaryImageUrl,
       video_url: videoUrl,
       property_group_id: propertyGroupId,
+      latitude,
+      longitude,
     })
     .select("id")
     .single();
@@ -170,6 +207,8 @@ export async function createOwnerListing({
   }
 
   if (!propertyGroupId) {
+    // Self-assign as the head of a new property group; latitude/longitude
+    // were already set above from the owner's actual map pin.
     const { error: groupError } = await supabase
       .from("listings")
       .update({ property_group_id: listing.id })

@@ -4,6 +4,7 @@
 -- 1. schema.sql has been run
 -- 2. policies-public-read.sql has been run (gallery + owner contact on detail page)
 -- 3. Register at least one owner account (/register?role=owner)
+-- After seeding, run seed-coordinates.sql to add columns + simulated map pins.
 --
 -- Safe to re-run: skips if any approved listing already exists.
 

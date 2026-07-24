@@ -18,8 +18,13 @@ export type Listing = {
   videoUrl?: string;
   listedAt: string;
   distanceToGate?: string;
+  /** Owner-supplied landmark for lodges that aren't well mapped on OSM */
+  nearestLandmark?: string;
   description?: string;
   images?: string[];
+  /** Owner-pinned map location, set when the listing was created */
+  latitude?: number;
+  longitude?: number;
   owner?: ListingOwner;
   /** Shared group ID when multiple agents list the same lodge */
   propertyGroupId?: string | null;
