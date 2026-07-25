@@ -108,7 +108,8 @@ function stepError(step: number, input: SurveyResponseInput): string | null {
 }
 
 export function PrePlatformSurveyForm() {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-1);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [input, setInput] = useState<SurveyResponseInput>(EMPTY_INPUT);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -121,8 +122,14 @@ export function PrePlatformSurveyForm() {
     setInput((current) => ({ ...current, [key]: value }));
   }
 
+  function handleStart() {
+    setDirection(1);
+    setStep(0);
+  }
+
   function handleBack() {
     setError(null);
+    setDirection(-1);
     setStep((current) => Math.max(0, current - 1));
   }
 
@@ -133,6 +140,7 @@ export function PrePlatformSurveyForm() {
       return;
     }
     setError(null);
+    setDirection(1);
     setStep((current) => Math.min(TOTAL_STEPS - 1, current + 1));
   }
 
@@ -161,20 +169,45 @@ export function PrePlatformSurveyForm() {
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-[#1D9E75]/30 bg-[#1D9E75]/10 px-5 py-10 text-center sm:px-6 sm:py-12">
-        <CheckCircle2 className="size-9 text-[#1D9E75] sm:size-10" />
+        {/* <CheckCircle2 className="size-9 text-[#1D9E75] sm:size-10" /> */}
         <h3 className="text-lg font-semibold text-[#04342C] sm:text-xl">
-          Thanks — that's genuinely useful.
+          Thanks, that&apos;s useful.
         </h3>
         <p className="max-w-md text-sm text-[#444441]/70">
-          Your response helps decide what FUTARoom actually builds next.
+          Your response helps me to decide what FUTARoom actually builds next.
           Watch this space for updates.
         </p>
       </div>
     );
   }
 
+  if (step === -1) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center animate-in fade-in-0 duration-300 sm:min-h-[75vh]">
+        <h1 className="text-2xl font-bold leading-snug text-[#0F6E56] sm:text-3xl">
+          Hi, Friend
+        </h1>
+        <p className="max-w-md text-sm text-[#444441]/75 sm:text-base">
+          I&apos;m building FUTARoom, a platform to help students find lodges
+          around FUTA and I need your help shaping it. Takes about a
+          minute of your time.
+        </p>
+        <button
+          type="button"
+          onClick={handleStart}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#EF9F27] px-6 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 sm:w-auto sm:py-3"
+        >
+          Get started
+          <ArrowRight className="size-4" />
+        </button>
+      </div>
+    );
+  }
+
   const isLastStep = step === TOTAL_STEPS - 1;
   const progressPercent = ((step + 1) / TOTAL_STEPS) * 100;
+  const slideDirection =
+    direction === 1 ? "slide-in-from-right-6" : "slide-in-from-left-6";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
@@ -193,146 +226,151 @@ export function PrePlatformSurveyForm() {
         </div>
       </div>
 
-      {step === 0 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            How do you currently find off-campus accommodation?
-          </h2>
-          <ChoicePills
-            options={CURRENT_METHOD_OPTIONS}
-            value={input.currentMethod}
-            onChange={(value) => update("currentMethod", value)}
-          />
-          {input.currentMethod === "other" && (
+      <div
+        key={step}
+        className={cn("animate-in fade-in-0 duration-300", slideDirection)}
+      >
+        {step === 0 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              How do you currently find off-campus accommodation?
+            </h2>
+            <ChoicePills
+              options={CURRENT_METHOD_OPTIONS}
+              value={input.currentMethod}
+              onChange={(value) => update("currentMethod", value)}
+            />
+            {input.currentMethod === "other" && (
+              <textarea
+                value={input.currentMethodOther}
+                onChange={(e) => update("currentMethodOther", e.target.value)}
+                placeholder="What's your method?"
+                className={cn(TEXTAREA_CLASS, "min-h-15")}
+                rows={2}
+                autoFocus
+              />
+            )}
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              What's the most frustrating part of finding a lodge?
+            </h2>
             <textarea
-              value={input.currentMethodOther}
-              onChange={(e) => update("currentMethodOther", e.target.value)}
-              placeholder="What's your method?"
-              className={cn(TEXTAREA_CLASS, "min-h-15")}
-              rows={2}
+              value={input.biggestFrustration}
+              onChange={(e) => update("biggestFrustration", e.target.value)}
+              placeholder="Be as specific as you like..."
+              className={TEXTAREA_CLASS}
+              rows={4}
               autoFocus
             />
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {step === 1 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            What's the most frustrating part of finding a lodge?
-          </h2>
-          <textarea
-            value={input.biggestFrustration}
-            onChange={(e) => update("biggestFrustration", e.target.value)}
-            placeholder="Be as specific as you like..."
-            className={TEXTAREA_CLASS}
-            rows={4}
-            autoFocus
-          />
-        </div>
-      )}
+        {step === 2 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              Rank these by importance when choosing a lodge
+            </h2>
+            <PriorityRanker
+              ranking={input.priorityRanking}
+              onChange={(ranking: PriorityItem[]) =>
+                update("priorityRanking", ranking)
+              }
+            />
+          </div>
+        )}
 
-      {step === 2 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            Rank these by importance when choosing a lodge
-          </h2>
-          <PriorityRanker
-            ranking={input.priorityRanking}
-            onChange={(ranking: PriorityItem[]) =>
-              update("priorityRanking", ranking)
-            }
-          />
-        </div>
-      )}
+        {step === 3 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              Have you ever been misled or scammed by an agent or listing?
+            </h2>
+            <ChoicePills
+              options={YES_NO_OPTIONS}
+              value={input.wasScammed}
+              onChange={(value) => update("wasScammed", value)}
+            />
+            {input.wasScammed === "yes" && (
+              <textarea
+                value={input.wasScammedDetails}
+                onChange={(e) => update("wasScammedDetails", e.target.value)}
+                placeholder="What happened? (optional)"
+                className={cn(TEXTAREA_CLASS, "min-h-15")}
+                rows={2}
+                autoFocus
+              />
+            )}
+          </div>
+        )}
 
-      {step === 3 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            Have you ever been misled or scammed by an agent or listing?
-          </h2>
-          <ChoicePills
-            options={YES_NO_OPTIONS}
-            value={input.wasScammed}
-            onChange={(value) => update("wasScammed", value)}
-          />
-          {input.wasScammed === "yes" && (
+        {step === 4 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              Would you trust a listing more if it had real photos/video and
+              admin verification, versus just an agent's description?
+            </h2>
+            <ChoicePills
+              options={TRUST_OPTIONS}
+              value={input.trustsVerifiedListings}
+              onChange={(value) => update("trustsVerifiedListings", value)}
+            />
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              Would you use a feature to find a roommate and split lodge cost?
+            </h2>
+            <ChoicePills
+              options={YES_NO_MAYBE_OPTIONS}
+              value={input.wantsRoommateSplit}
+              onChange={(value) => update("wantsRoommateSplit", value)}
+            />
+          </div>
+        )}
+
+        {step === 6 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              Would you pay a small deposit online to reserve a viewing or
+              hold a room, if the listing was verified?
+            </h2>
+            <ChoicePills
+              options={YES_NO_MAYBE_OPTIONS}
+              value={input.willingToPayDeposit}
+              onChange={(value) => update("willingToPayDeposit", value)}
+            />
+          </div>
+        )}
+
+        {step === 7 && (
+          <div className="space-y-2.5 sm:space-y-3">
+            <h2 className={HEADING_CLASS}>
+              Would you actually switch to a platform like this instead of
+              your current method?
+            </h2>
+            <ChoicePills
+              options={YES_NO_MAYBE_OPTIONS}
+              value={input.wouldSwitch}
+              onChange={(value) => update("wouldSwitch", value)}
+            />
             <textarea
-              value={input.wasScammedDetails}
-              onChange={(e) => update("wasScammedDetails", e.target.value)}
-              placeholder="What happened? (optional)"
+              value={input.wouldSwitchReason}
+              onChange={(e) => update("wouldSwitchReason", e.target.value)}
+              placeholder="Why, or why not? (optional)"
               className={cn(TEXTAREA_CLASS, "min-h-15")}
               rows={2}
-              autoFocus
             />
-          )}
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            Would you trust a listing more if it had real photos/video and
-            admin verification, versus just an agent's description?
-          </h2>
-          <ChoicePills
-            options={TRUST_OPTIONS}
-            value={input.trustsVerifiedListings}
-            onChange={(value) => update("trustsVerifiedListings", value)}
-          />
-        </div>
-      )}
-
-      {step === 5 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            Would you use a feature to find a roommate and split lodge cost?
-          </h2>
-          <ChoicePills
-            options={YES_NO_MAYBE_OPTIONS}
-            value={input.wantsRoommateSplit}
-            onChange={(value) => update("wantsRoommateSplit", value)}
-          />
-        </div>
-      )}
-
-      {step === 6 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            Would you pay a small deposit online to reserve a viewing or hold
-            a room, if the listing was verified?
-          </h2>
-          <ChoicePills
-            options={YES_NO_MAYBE_OPTIONS}
-            value={input.willingToPayDeposit}
-            onChange={(value) => update("willingToPayDeposit", value)}
-          />
-        </div>
-      )}
-
-      {step === 7 && (
-        <div className="space-y-2.5 sm:space-y-3">
-          <h2 className={HEADING_CLASS}>
-            Would you actually switch to a platform like this instead of your
-            current method?
-          </h2>
-          <ChoicePills
-            options={YES_NO_MAYBE_OPTIONS}
-            value={input.wouldSwitch}
-            onChange={(value) => update("wouldSwitch", value)}
-          />
-          <textarea
-            value={input.wouldSwitchReason}
-            onChange={(e) => update("wouldSwitchReason", e.target.value)}
-            placeholder="Why, or why not? (optional)"
-            className={cn(TEXTAREA_CLASS, "min-h-15")}
-            rows={2}
-          />
-          <p className={HINT_CLASS}>
-            This one tells us whether the whole idea actually holds up.
-          </p>
-        </div>
-      )}
+            <p className={HINT_CLASS}>
+              This one tells us whether the whole idea actually holds up.
+            </p>
+          </div>
+        )}
+      </div>
 
       {error && (
         <p className="rounded-lg border border-[#E24B4A]/30 bg-[#E24B4A]/10 px-4 py-3 text-sm text-[#E24B4A]">
