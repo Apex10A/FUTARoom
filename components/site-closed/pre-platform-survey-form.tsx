@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ChoicePills } from "@/components/site-closed/choice-pills";
 import { PriorityRanker } from "@/components/site-closed/priority-ranker";
 import { SuccessAnimation } from "@/components/site-closed/success-animation";
+import { subscribeToUpdates } from "@/lib/survey/subscribe-to-updates";
 import { submitSurveyResponse } from "@/lib/survey/submit-survey-response";
 import type {
   CurrentMethod,
@@ -128,6 +129,11 @@ export function PrePlatformSurveyForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [wantsUpdates, setWantsUpdates] = useState(false);
+  const [updatesEmail, setUpdatesEmail] = useState("");
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscribeError, setSubscribeError] = useState<string | null>(null);
 
   function update<K extends keyof SurveyResponseInput>(
     key: K,
@@ -185,16 +191,87 @@ export function PrePlatformSurveyForm() {
     setSubmitted(true);
   }
 
+  async function handleSubscribe(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (!updatesEmail.trim()) {
+      setSubscribeError("Enter an email so I know where to reach you.");
+      return;
+    }
+
+    setSubscribeError(null);
+    setSubscribing(true);
+    const result = await subscribeToUpdates(updatesEmail.trim());
+    setSubscribing(false);
+
+    if (result.error) {
+      setSubscribeError(result.error);
+      return;
+    }
+
+    setSubscribed(true);
+  }
+
   if (submitted) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-[#1D9E75]/30 bg-[#1D9E75]/10 px-5 py-10 text-center sm:px-6 sm:py-12">
-        <SuccessAnimation />
-        <h3 className="text-lg font-semibold text-[#04342C] sm:text-xl">
-          {thanksHeading(name)} 
-        </h3>
-        <p className="max-w-md text-sm text-[#444441]/70">
-        This&apos;ll directly shape what I build, Watch this space for updates.
-        </p>
+      <div className="flex min-h-[70vh] flex-col items-center justify-center sm:min-h-[75vh]">
+        <div className="flex w-full max-w-md flex-col items-center gap-3 rounded-xl border border-[#1D9E75]/30 bg-[#1D9E75]/10 px-5 py-10 text-center sm:px-6 sm:py-12">
+          <SuccessAnimation />
+          <h3 className="text-lg font-semibold text-[#04342C] sm:text-xl">
+            {thanksHeading(name)}
+          </h3>
+          <p className="max-w-md text-sm text-[#444441]/70">
+            This&apos;ll directly shape what I build.
+          </p>
+
+          <div className="mt-2 w-full border-t border-[#1D9E75]/25 pt-5 text-left">
+            {subscribed ? (
+              <p className="text-center text-sm font-medium text-[#0F6E56]">
+                You&apos;re on the list, I&apos;ll keep you posted.
+              </p>
+            ) : (
+              <form onSubmit={handleSubscribe} className="space-y-3">
+                <label className="flex items-start gap-2.5 text-sm text-[#444441]">
+                  <input
+                    type="checkbox"
+                    checked={wantsUpdates}
+                    onChange={(e) => setWantsUpdates(e.target.checked)}
+                    className="mt-0.5 size-4 shrink-0 rounded border-[#444441]/30 accent-[#0F6E56]"
+                  />
+                  I&apos;d like to be notified when FUTARoom launches
+                </label>
+
+                {wantsUpdates && (
+                  <div className="space-y-2">
+                    <input
+                      type="email"
+                      value={updatesEmail}
+                      onChange={(e) => setUpdatesEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className={INPUT_CLASS}
+                      autoFocus
+                    />
+                    {subscribeError && (
+                      <p className="text-xs text-[#E24B4A]">
+                        {subscribeError}
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={subscribing}
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#0F6E56] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0F6E56]/90 disabled:opacity-60"
+                    >
+                      {subscribing && (
+                        <Loader2 className="size-4 animate-spin" />
+                      )}
+                      {subscribing ? "Saving..." : "Notify me"}
+                    </button>
+                  </div>
+                )}
+              </form>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
