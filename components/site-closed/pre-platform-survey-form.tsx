@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ChoicePills } from "@/components/site-closed/choice-pills";
 import { PriorityRanker } from "@/components/site-closed/priority-ranker";
+import { SuccessAnimation } from "@/components/site-closed/success-animation";
 import { submitSurveyResponse } from "@/lib/survey/submit-survey-response";
 import type {
   CurrentMethod,
@@ -21,8 +22,20 @@ const HEADING_CLASS =
 const HINT_CLASS = "text-xs text-[#444441]/60 sm:text-sm";
 const TEXTAREA_CLASS =
   "flex min-h-[80px] w-full rounded-lg border border-[#444441]/20 bg-white px-3 py-2.5 text-base text-[#2c2b28] outline-none transition-colors placeholder:text-[#444441]/40 focus-visible:border-[#0F6E56] focus-visible:ring-3 focus-visible:ring-[#0F6E56]/20 md:text-sm";
+const INPUT_CLASS =
+  "flex h-12 w-full rounded-lg border border-[#444441]/20 bg-white px-3.5 text-base text-[#2c2b28] outline-none transition-colors placeholder:text-[#444441]/40 focus-visible:border-[#0F6E56] focus-visible:ring-3 focus-visible:ring-[#0F6E56]/20 md:text-sm";
 
 const TOTAL_STEPS = 8;
+
+function greetingPrefix(rawName: string): string {
+  const trimmed = rawName.trim();
+  return trimmed ? `Hello ${trimmed}` : "Hello there";
+}
+
+function thanksHeading(rawName: string): string {
+  const trimmed = rawName.trim();
+  return trimmed ? `Thanks, ${trimmed}!` : "Thanks!";
+}
 
 const CURRENT_METHOD_OPTIONS: { value: CurrentMethod; label: string }[] = [
   { value: "word_of_mouth", label: "Word of mouth" },
@@ -108,8 +121,9 @@ function stepError(step: number, input: SurveyResponseInput): string | null {
 }
 
 export function PrePlatformSurveyForm() {
-  const [step, setStep] = useState(-1);
+  const [step, setStep] = useState(-2);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [name, setName] = useState("");
   const [input, setInput] = useState<SurveyResponseInput>(EMPTY_INPUT);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -120,6 +134,11 @@ export function PrePlatformSurveyForm() {
     value: SurveyResponseInput[K]
   ) {
     setInput((current) => ({ ...current, [key]: value }));
+  }
+
+  function handleNameSubmit() {
+    setDirection(1);
+    setStep(-1);
   }
 
   function handleStart() {
@@ -169,28 +188,64 @@ export function PrePlatformSurveyForm() {
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-[#1D9E75]/30 bg-[#1D9E75]/10 px-5 py-10 text-center sm:px-6 sm:py-12">
-        {/* <CheckCircle2 className="size-9 text-[#1D9E75] sm:size-10" /> */}
+        <SuccessAnimation />
         <h3 className="text-lg font-semibold text-[#04342C] sm:text-xl">
-          Thanks, that&apos;s useful.
+          {thanksHeading(name)} 
         </h3>
         <p className="max-w-md text-sm text-[#444441]/70">
-          Your response helps me to decide what FUTARoom actually builds next.
-          Watch this space for updates.
+        This&apos;ll directly shape what I build, Watch this space for updates.
         </p>
+      </div>
+    );
+  }
+
+  if (step === -2) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center animate-in fade-in-0 duration-300 sm:min-h-[75vh]">
+        <div className="w-full max-w-sm space-y-2">
+          <h1 className="text-xl font-bold leading-snug text-[#0F6E56] sm:text-2xl">
+            What should I call you?
+          </h1>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleNameSubmit();
+              }
+            }}
+            placeholder="Your first name"
+            className={cn(INPUT_CLASS, "text-center")}
+            autoFocus
+          />
+          <p className="text-xs text-[#444441]/55 sm:text-sm">
+            So I can personalize this a bit
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleNameSubmit}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#EF9F27] px-6 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 sm:w-auto sm:py-3"
+        >
+          Continue
+          <ArrowRight className="size-4" />
+        </button>
       </div>
     );
   }
 
   if (step === -1) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center animate-in fade-in-0 duration-300 sm:min-h-[75vh]">
-        <h1 className="text-2xl font-bold leading-snug text-[#0F6E56] sm:text-3xl">
-          Hi, Friend
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center sm:min-h-[75vh]">
+        <h1 className="text-2xl font-bold leading-snug text-[#0F6E56] sm:text-3xl animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+          {greetingPrefix(name)}
         </h1>
-        <p className="max-w-md text-sm text-[#444441]/75 sm:text-base">
+        <p className="max-w-md text-sm text-[#444441]/75 sm:text-base animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
           I&apos;m building FUTARoom, a platform to help students find lodges
-          around FUTA and I need your help shaping it. Takes about a
-          minute of your time.
+          around FUTA — and I need your help shaping it. Takes about 2
+          minutes.
         </p>
         <button
           type="button"
