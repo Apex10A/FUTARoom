@@ -30,7 +30,7 @@ const TOTAL_STEPS = 8;
 
 function greetingPrefix(rawName: string): string {
   const trimmed = rawName.trim();
-  return trimmed ? `Hello ${trimmed}` : "Hello there";
+  return trimmed ? `Hi, ${trimmed}` : "Hi there!";
 }
 
 function thanksHeading(rawName: string): string {
@@ -77,17 +77,15 @@ const EMPTY_INPUT: SurveyResponseInput = {
   wouldSwitchReason: "",
 };
 
+// Every choice screen requires a selection before moving on. Section 2
+// (the open-ended "biggest frustration" text) is the one exception — it's
+// free text, so it stays optional.
 function stepError(step: number, input: SurveyResponseInput): string | null {
   switch (step) {
     case 0:
-      if (!input.currentMethod) return "Let us know how you currently search.";
+      if (!input.currentMethod) return "Pick one to continue.";
       if (input.currentMethod === "other" && !input.currentMethodOther.trim()) {
         return "Tell us what \"other\" means for you.";
-      }
-      return null;
-    case 1:
-      if (!input.biggestFrustration.trim()) {
-        return "Share your biggest frustration — even one line helps.";
       }
       return null;
     case 2:
@@ -96,25 +94,19 @@ function stepError(step: number, input: SurveyResponseInput): string | null {
       }
       return null;
     case 3:
-      if (!input.wasScammed) return "Let us know if you've been scammed before.";
+      if (!input.wasScammed) return "Pick one to continue.";
       return null;
     case 4:
-      if (!input.trustsVerifiedListings) {
-        return "Let us know if verification would make you trust a listing more.";
-      }
+      if (!input.trustsVerifiedListings) return "Pick one to continue.";
       return null;
     case 5:
-      if (!input.wantsRoommateSplit) {
-        return "Let us know about the roommate-split idea.";
-      }
+      if (!input.wantsRoommateSplit) return "Pick one to continue.";
       return null;
     case 6:
-      if (!input.willingToPayDeposit) {
-        return "Let us know about paying a deposit to hold a room.";
-      }
+      if (!input.willingToPayDeposit) return "Pick one to continue.";
       return null;
     case 7:
-      if (!input.wouldSwitch) return "Let us know if you'd actually switch.";
+      if (!input.wouldSwitch) return "Pick one to continue.";
       return null;
     default:
       return null;
@@ -159,11 +151,7 @@ export function PrePlatformSurveyForm() {
   }
 
   function handleNext() {
-    const validationError = stepError(step, input);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    if (stepError(step, input)) return;
     setError(null);
     setDirection(1);
     setStep((current) => Math.min(TOTAL_STEPS - 1, current + 1));
@@ -172,11 +160,7 @@ export function PrePlatformSurveyForm() {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
-    const validationError = stepError(step, input);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    if (stepError(step, input)) return;
 
     setError(null);
     setSubmitting(true);
@@ -293,13 +277,13 @@ export function PrePlatformSurveyForm() {
                 handleNameSubmit();
               }
             }}
-            placeholder="Your first name"
+            placeholder="Your name..."
             className={cn(INPUT_CLASS, "text-center")}
             autoFocus
           />
-          <p className="text-xs text-[#444441]/55 sm:text-sm">
+          {/* <p className="text-xs text-[#444441]/55 sm:text-sm">
             So I can personalize this a bit
-          </p>
+          </p> */}
         </div>
         <button
           type="button"
@@ -321,8 +305,8 @@ export function PrePlatformSurveyForm() {
         </h1>
         <p className="max-w-md text-sm text-[#444441]/75 sm:text-base animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
           I&apos;m building FUTARoom, a platform to help students find lodges
-          around FUTA — and I need your help shaping it. Takes about 2
-          minutes.
+          around FUTA and I need your help shaping it. Takes about a
+          minute of your time.
         </p>
         <button
           type="button"
@@ -340,6 +324,7 @@ export function PrePlatformSurveyForm() {
   const progressPercent = ((step + 1) / TOTAL_STEPS) * 100;
   const slideDirection =
     direction === 1 ? "slide-in-from-right-6" : "slide-in-from-left-6";
+  const canProceed = !stepError(step, input);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
@@ -510,12 +495,12 @@ export function PrePlatformSurveyForm() {
         </p>
       )}
 
-      <div className="flex items-center gap-3 pt-1">
+      <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:items-center">
         {step > 0 && (
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#444441]/20 bg-white px-5 py-3.5 text-sm font-semibold text-[#444441] transition-colors hover:border-[#444441]/35 sm:py-3"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#444441]/20 bg-white px-5 py-3.5 text-sm font-semibold text-[#444441] transition-colors hover:border-[#444441]/35 sm:w-auto sm:py-3"
           >
             <ArrowLeft className="size-4" />
             Back
@@ -525,8 +510,8 @@ export function PrePlatformSurveyForm() {
         {isLastStep ? (
           <button
             type="submit"
-            disabled={submitting}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#EF9F27] px-5 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 disabled:opacity-60 sm:flex-none sm:py-3"
+            disabled={submitting || !canProceed}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#EF9F27] px-5 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#EF9F27] sm:w-auto sm:py-3"
           >
             {submitting && <Loader2 className="size-4 animate-spin" />}
             {submitting ? "Submitting..." : "Submit response"}
@@ -535,7 +520,8 @@ export function PrePlatformSurveyForm() {
           <button
             type="button"
             onClick={handleNext}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#EF9F27] px-5 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 sm:flex-none sm:py-3"
+            disabled={!canProceed}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#EF9F27] px-5 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#EF9F27] sm:w-auto sm:py-3"
           >
             Continue
             <ArrowRight className="size-4" />
