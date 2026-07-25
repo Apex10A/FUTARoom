@@ -28,8 +28,8 @@ export function ChoicePills<T extends string>({
             className={cn(
               "rounded-full border px-4 py-2.5 text-sm font-medium transition-colors sm:py-2",
               isActive
-                ? "border-[#E8B84A] bg-[#E8B84A]/15 text-[#E8B84A]"
-                : "border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:text-white"
+                ? "border-[#0F6E56] bg-[#0F6E56] text-white"
+                : "border-[#444441]/20 bg-white text-[#444441]/75 hover:border-[#0F6E56]/50 hover:text-[#0F6E56]"
             )}
           >
             {option.label}

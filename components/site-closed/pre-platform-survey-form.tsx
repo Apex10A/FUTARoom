@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { ChoicePills } from "@/components/site-closed/choice-pills";
 import { PriorityRanker } from "@/components/site-closed/priority-ranker";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { submitSurveyResponse } from "@/lib/survey/submit-survey-response";
 import type {
   CurrentMethod,
@@ -18,10 +17,10 @@ import type {
 } from "@/lib/types/survey";
 
 const LABEL_CLASS =
-  "text-[15px] font-medium leading-snug text-white/85 sm:text-base";
-const HINT_CLASS = "text-xs text-white/45 sm:text-sm";
+  "block text-[15px] font-medium leading-snug text-[#2c2b28] sm:text-base";
+const HINT_CLASS = "text-xs text-[#444441]/60 sm:text-sm";
 const TEXTAREA_CLASS =
-  "border-white/15 bg-white/5 text-white placeholder:text-white/40 focus-visible:border-[#E8B84A]/50 focus-visible:ring-[#E8B84A]/20";
+  "flex min-h-[80px] w-full rounded-lg border border-[#444441]/20 bg-white px-3 py-2.5 text-base text-[#2c2b28] outline-none transition-colors placeholder:text-[#444441]/40 focus-visible:border-[#0F6E56] focus-visible:ring-3 focus-visible:ring-[#0F6E56]/20 md:text-sm";
 const QUESTION_CLASS = "space-y-2.5 sm:space-y-3";
 
 const CURRENT_METHOD_OPTIONS: { value: CurrentMethod; label: string }[] = [
@@ -125,12 +124,12 @@ export function PrePlatformSurveyForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-[#E8B84A]/30 bg-[#E8B84A]/10 px-5 py-10 text-center sm:px-6 sm:py-12">
-        <CheckCircle2 className="size-9 text-[#E8B84A] sm:size-10" />
-        <h3 className="text-lg font-semibold text-white sm:text-xl">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-[#1D9E75]/30 bg-[#1D9E75]/10 px-5 py-10 text-center sm:px-6 sm:py-12">
+        <CheckCircle2 className="size-9 text-[#1D9E75] sm:size-10" />
+        <h3 className="text-lg font-semibold text-[#04342C] sm:text-xl">
           Thanks — that's genuinely useful.
         </h3>
-        <p className="max-w-md text-sm text-white/60">
+        <p className="max-w-md text-sm text-[#444441]/70">
           Your response helps decide what FUTARoom actually builds next.
           Watch this space for updates.
         </p>
@@ -141,30 +140,30 @@ export function PrePlatformSurveyForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           1. How do you currently find off-campus accommodation?
-        </Label>
+        </label>
         <ChoicePills
           options={CURRENT_METHOD_OPTIONS}
           value={input.currentMethod}
           onChange={(value) => update("currentMethod", value)}
         />
         {input.currentMethod === "other" && (
-          <Textarea
+          <textarea
             value={input.currentMethodOther}
             onChange={(e) => update("currentMethodOther", e.target.value)}
             placeholder="What's your method?"
-            className={TEXTAREA_CLASS}
+            className={cn(TEXTAREA_CLASS, "min-h-[60px]")}
             rows={2}
           />
         )}
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           2. What's the most frustrating part of finding a lodge?
-        </Label>
-        <Textarea
+        </label>
+        <textarea
           value={input.biggestFrustration}
           onChange={(e) => update("biggestFrustration", e.target.value)}
           placeholder="Be as specific as you like..."
@@ -174,9 +173,9 @@ export function PrePlatformSurveyForm() {
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           3. Rank these by importance when choosing a lodge
-        </Label>
+        </label>
         <PriorityRanker
           ranking={input.priorityRanking}
           onChange={(ranking: PriorityItem[]) =>
@@ -186,30 +185,30 @@ export function PrePlatformSurveyForm() {
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           4. Have you ever been misled or scammed by an agent or listing?
-        </Label>
+        </label>
         <ChoicePills
           options={YES_NO_OPTIONS}
           value={input.wasScammed}
           onChange={(value) => update("wasScammed", value)}
         />
         {input.wasScammed === "yes" && (
-          <Textarea
+          <textarea
             value={input.wasScammedDetails}
             onChange={(e) => update("wasScammedDetails", e.target.value)}
             placeholder="What happened? (optional)"
-            className={TEXTAREA_CLASS}
+            className={cn(TEXTAREA_CLASS, "min-h-[60px]")}
             rows={2}
           />
         )}
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           5. Would you trust a listing more if it had real photos/video and
           admin verification, versus just an agent's description?
-        </Label>
+        </label>
         <ChoicePills
           options={TRUST_OPTIONS}
           value={input.trustsVerifiedListings}
@@ -218,9 +217,9 @@ export function PrePlatformSurveyForm() {
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           6. Would you use a feature to find a roommate and split lodge cost?
-        </Label>
+        </label>
         <ChoicePills
           options={YES_NO_MAYBE_OPTIONS}
           value={input.wantsRoommateSplit}
@@ -229,10 +228,10 @@ export function PrePlatformSurveyForm() {
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           7. Would you pay a small deposit online to reserve a viewing or
           hold a room, if the listing was verified?
-        </Label>
+        </label>
         <ChoicePills
           options={YES_NO_MAYBE_OPTIONS}
           value={input.willingToPayDeposit}
@@ -241,20 +240,20 @@ export function PrePlatformSurveyForm() {
       </div>
 
       <div className={QUESTION_CLASS}>
-        <Label className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
           8. Would you actually switch to a platform like this instead of
           your current method?
-        </Label>
+        </label>
         <ChoicePills
           options={YES_NO_MAYBE_OPTIONS}
           value={input.wouldSwitch}
           onChange={(value) => update("wouldSwitch", value)}
         />
-        <Textarea
+        <textarea
           value={input.wouldSwitchReason}
           onChange={(e) => update("wouldSwitchReason", e.target.value)}
           placeholder="Why, or why not? (optional)"
-          className={TEXTAREA_CLASS}
+          className={cn(TEXTAREA_CLASS, "min-h-[60px]")}
           rows={2}
         />
         <p className={HINT_CLASS}>
@@ -263,7 +262,7 @@ export function PrePlatformSurveyForm() {
       </div>
 
       {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p className="rounded-lg border border-[#E24B4A]/30 bg-[#E24B4A]/10 px-4 py-3 text-sm text-[#E24B4A]">
           {error}
         </p>
       )}
@@ -271,7 +270,7 @@ export function PrePlatformSurveyForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#E8B84A] px-5 py-3.5 text-sm font-semibold text-[#0a100e] transition-colors hover:bg-[#E8B84A]/90 disabled:opacity-60 sm:w-auto sm:py-3"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#EF9F27] px-5 py-3.5 text-sm font-semibold text-[#04342C] transition-colors hover:bg-[#EF9F27]/90 disabled:opacity-60 sm:w-auto sm:py-3"
       >
         {submitting && <Loader2 className="size-4 animate-spin" />}
         {submitting ? "Submitting..." : "Submit response"}
