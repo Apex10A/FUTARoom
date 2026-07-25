@@ -39,16 +39,16 @@ export function PriorityRanker({ ranking, onChange }: PriorityRankerProps) {
               className={cn(
                 "flex items-center gap-3 rounded-lg border px-3.5 py-3 text-left text-sm font-medium leading-snug transition-colors sm:px-4",
                 isRanked
-                  ? "border-[#E8B84A]/50 bg-[#E8B84A]/10 text-white"
-                  : "border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:text-white"
+                  ? "border-[#0F6E56] bg-[#E1F5EE] text-[#04342C]"
+                  : "border-[#444441]/20 bg-white text-[#444441]/75 hover:border-[#0F6E56]/40 hover:text-[#0F6E56]"
               )}
             >
               <span
                 className={cn(
                   "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                   isRanked
-                    ? "bg-[#E8B84A] text-[#0a100e]"
-                    : "border border-white/20 text-white/40"
+                    ? "bg-[#0F6E56] text-white"
+                    : "border border-[#444441]/25 text-[#444441]/40"
                 )}
               >
                 {isRanked ? rank + 1 : ""}
@@ -58,10 +58,10 @@ export function PriorityRanker({ ranking, onChange }: PriorityRankerProps) {
           );
         })}
       </div>
-      <p className="text-xs text-white/45">
+      <p className="text-xs text-[#444441]/60">
         Tap in order, most important first. Tap again to remove.{" "}
         {ranking.length > 0 && ranking.length < PRIORITY_ITEMS.length && (
-          <span className="text-[#E8B84A]">
+          <span className="text-[#0F6E56]">
             {PRIORITY_ITEMS.length - ranking.length} left to rank.
           </span>
         )}
